@@ -6,12 +6,12 @@ from inventory.models import NonSerializedProducts
 # Create your models here.
 class Suppliers (models.Model):
     supplier_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255,null=False)
-    contact_person = models.CharField(max_length=255,null=False)
-    phone_number = models.CharField(max_length=255,null=False)
-    email = models.CharField(max_length=255,null=False)
-    address = models.CharField(max_length=255,null=False)
-    created = models.DateTimeField(auto_now_add=True)
+    supplier_name = models.CharField(max_length=255,null=False,blank=False)
+    contact_person = models.CharField(max_length=255,null=False,blank=False)
+    supplier_phone = models.CharField(max_length=20,null=False,blank=False)
+    supplier_mail = models.CharField(max_length=255,null=False,blank=False)
+    supplier_address = models.CharField(max_length=255,null=False,blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class PurchaseOrders(models.Model):
     shipmentStatus = [('Pending','Pending'), ('Accepted','Accepted'),

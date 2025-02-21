@@ -7,7 +7,10 @@ class Employee(models.Model):
                 ('Inventory Manager','Inventory Manager')]
 
     employee_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=255,null=False,unique=True)
-    password = models.CharField(max_length=255)
-    type = models.CharField(choices = roleType,null=False,default='Sales Executive')
-
+    employee_username = models.CharField(max_length=255,null=False,blank=False)
+    employee_password = models.CharField(max_length=255)
+    role = models.CharField(choices = roleType,null=False,default='Sales Executive')
+    phone = models.CharField(max_length=15,null=False,blank=False)
+    email = models.CharField(max_length=255,null=False,blank=False)
+    address = models.CharField(max_length=255,null=False,blank=False)
+    photo = models.ImageField(null=False,blank=False)
