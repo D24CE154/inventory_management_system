@@ -17,13 +17,16 @@ class Products(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class ProductItems(models.Model):
-    productStatus = [('Available','Available'),('Sold','Sold')]
+    productStatus = [
+        ('Available', 'Available'),
+        ('Sold', 'Sold')
+    ]
 
-    product_id = models.ForeignKey(Products,null=False,on_delete=models.CASCADE)
-    serial_number = models.CharField(max_length=255,null=False,unique=True)
+    product_id = models.ForeignKey('Products', null=False, on_delete=models.CASCADE)
+    serial_number = models.CharField(max_length=255, null=False, unique=True)
     specifications = models.JSONField(default=dict)
-    price = models.DecimalField(max_digits=10,null=False,default=0)
-    status = models.CharField(choices=productStatus,null=False,default='Available')
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=False, default=0)  # Added decimal_places
+    status = models.CharField(choices=productStatus, max_length=10, null=False, default='Available')  # Added max_length
     created_at = models.DateTimeField(auto_now_add=True)
 
 class NonSerializedProducts (models.Model):
