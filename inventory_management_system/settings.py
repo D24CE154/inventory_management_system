@@ -72,8 +72,8 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'APP': {
-            'client_id': '991069191736-4i33kb61v075sodvoldkkadans5cfrvg.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': '',
+            'secret': '',
             'key': ''
         }
     }
@@ -168,6 +168,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'samarchauhan2729@gmail.com'
-EMAIL_HOST_PASSWORD = 'uskq zity frie dsgz'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
