@@ -1,0 +1,204 @@
+/* General Body Styles */
+html, body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+    display: flex;
+    margin: 0;
+}
+
+/* Sidebar Styles */
+aside {
+    width: 240px;
+    background-color: #FFFFFF;
+    color: #1E293B;
+    border-right: 1px solid #E2E8F0;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Sidebar Navigation */
+aside nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+aside nav ul li {
+    padding: 12px 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+aside nav ul li a {
+    display: flex;
+    align-items: center;
+    color: #1E293B;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    padding: 12px 20px;
+    border-radius: 8px;
+}
+
+aside nav ul li:hover, aside nav ul li:hover a {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 8px;
+}
+
+aside nav ul li.active a {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 8px;
+}
+
+/* Main Content */
+main {
+    flex: 1;
+    padding: 20px;
+    background-color: #F9FAFB;
+    margin-left: 240px;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: calc(100vw - 240px);
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* When sidebar is hidden */
+.hide-sidebar main {
+    margin-left: 0;
+    width: 100vw;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFFFFF;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+/* Card Container */
+.dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+/* Individual Card */
+.dashboard-container > div {
+    background-color: #FFFFFF;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    text-align: center;
+    flex: 1 1 300px; 
+    min-width: 250px;
+    box-sizing: border-box;
+}
+
+/* Hover Effect on Card */
+.dashboard-container > div:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+/* Card Title & Number */
+.dashboard-container h3 {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #334155;
+    margin: 0;
+}
+
+.dashboard-container p {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #0F172A;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .dashboard-container > div {
+        width: 100%;
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    aside {
+        width: 200px;
+    }
+
+    main {
+        margin-left: 200px;
+        width: calc(100vw - 200px);
+    }
+}
+
+@media (max-width: 600px) {
+    aside {
+        display: none;
+    }
+
+    main {
+        margin-left: 0;
+        width: 100vw;
+    }
+
+    .dashboard-container {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Buttons */
+button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #2563EB;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+}
+
+button:hover {
+    background-color: #1E40AF;
+    transform: scale(1.05);
+}

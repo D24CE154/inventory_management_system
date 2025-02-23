@@ -1,0 +1,40 @@
+{#{% extends 'base.html' %}#}
+{% load static %}
+{% load socialaccount %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+<div class="container">
+    <h1>Sign In</h1>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Sign In</button>
+    </form>
+    <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
+    <!-- Google Sign-In -->
+    <p>Or sign in with Google:</p>
+    <a href="{% provider_login_url 'google' %}">
+        <button type="button">Sign In with Google</button>
+    </a>
+
+</div>
+</body>
+{% if messages %}
+    <script>
+        window.onload = function() {
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        };
+    </script>
+{% endif %}
+
+</html>

@@ -1,18 +1,30 @@
 from django.db import models
+from django.utils import timezone
 
-# Create your models here.
+ROLE_CHOICES = [
+    ('Admin', 'Admin'),
+    ('Inventory Manager', 'Inventory Manager'),
+    ('Sales Executive', 'Sales Executive'),
+]
+
 class Employee(models.Model):
-    roleType = [
-        ('Admin', 'Admin'),
-        ('Sales Executive', 'Sales Executive'),
-        ('Inventory Manager', 'Inventory Manager')
-    ]
-
     employee_id = models.AutoField(primary_key=True)
-    employee_username = models.CharField(max_length=255, null=False, blank=False)
-    employee_password = models.CharField(max_length=255)
-    role = models.CharField(choices=roleType, max_length=20, null=False, default='Sales Executive')  # Added max_length
-    phone = models.CharField(max_length=15, null=False, blank=False)
-    email = models.CharField(max_length=255, null=False, blank=False)
-    address = models.CharField(max_length=255, null=False, blank=False)
-    photo = models.ImageField(null=False, blank=False)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255)  # Store hashed passwords
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Sales Executive')
+    phone = models.CharField(max_length=15, unique=True)
+    address = models.TextField()
+    photo = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_valid = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.role})"
+
+class AuditLog(models.Model):
+    auditlog_id = models.AutoField(primary_key=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255, null=False, blank=False)
+    date = models.DateTimeField(auto_now_add=True)

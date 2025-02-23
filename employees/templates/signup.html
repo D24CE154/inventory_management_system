@@ -1,0 +1,79 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+<div class="container">
+    {% if otp_sent %}
+        <h1>Verify OTP</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="otp" placeholder="Enter OTP" required>
+            <button type="submit">Verify OTP</button>
+        </form>
+    {% else %}
+        <h1>Create Account</h1>
+        <form method="POST" id="signup-form">
+            {% csrf_token %}
+
+            <input type="text" name="full_name" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="phone" placeholder="Phone" required>
+            <input type="text" name="address" placeholder="Address" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <p id="password-error" class="error-message"></p>  <!-- Error message here -->
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+
+            <button type="submit">Sign Up</button>
+        </form>
+    {% endif %}
+
+    <p>Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
+
+    <!-- Google Sign-Up -->
+    <p>Or sign up with Google:</p>
+    <a href="{% provider_login_url 'google' %}">
+        <button type="button">Sign Up with Google</button>
+    </a>
+</div>
+
+<!-- JavaScript for password validation -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const signupForm = document.getElementById("signup-form");
+        const passwordInput = document.querySelector('input[name="password"]');
+        const confirmPasswordInput = document.querySelector('input[name="confirm_password"]');
+        const passwordError = document.getElementById("password-error");
+
+        signupForm.addEventListener("submit", function (event) {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Password validation regex
+            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[ -/:-@\[-`{-~]).{6,64}$/;
+
+            if (!passwordPattern.test(password)) {
+                passwordError.textContent = "Password must have uppercase, lowercase, number, special character (8-15 chars).";
+                event.preventDefault();
+                return;
+            } else {
+                passwordError.textContent = "";
+            }
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
