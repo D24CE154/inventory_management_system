@@ -1,79 +1,142 @@
 {% load static %}
-{% load socialaccount %}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign Up</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <title>Create Account</title>
+    <link rel="stylesheet" href="{% static 'signup.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+</head>
 </head>
 <body>
+<div class="signup-container">
+    <h1>Create Account</h1>
 
-<div class="container">
     {% if otp_sent %}
-        <h1>Verify OTP</h1>
-        <form method="POST">
-            {% csrf_token %}
-            <input type="text" name="otp" placeholder="Enter OTP" required>
-            <button type="submit">Verify OTP</button>
-        </form>
+        <div class="otp-container">
+            <h2>Email Verification</h2>
+            <p class="otp-info">We've sent a verification code to your email <strong>{{ request.session.signup_data.email }}</strong></p>
+
+            <form method="POST" class="centered-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="otp-input">Enter OTP</label>
+                    <input type="text" id="otp-input" name="otp" placeholder="6-digit OTP" maxlength="6" required>
+                </div>
+                <button type="submit" class="signup-button">Verify OTP</button>
+            </form>
+
+            {% if otp_expired %}
+                <p class="error-message">Your OTP has expired. Please request a new one.</p>
+            {% endif %}
+
+            <form method="POST" action="{% url 'resend_otp' %}" class="resend-form">
+                {% csrf_token %}
+                <button type="submit" id="resend-otp" class="resend-button" {% if otp_resend_attempts >= 3 %}disabled{% endif %}>
+                    {% if otp_resend_attempts >= 3 %}
+                        Maximum attempts reached
+                    {% else %}
+                        Resend OTP (30s)
+                    {% endif %}
+                </button>
+            </form>
+        </div>
     {% else %}
-        <h1>Create Account</h1>
-        <form method="POST" id="signup-form">
+        <form method="POST" enctype="multipart/form-data" class="side-by-side-form">
             {% csrf_token %}
-
-            <input type="text" name="full_name" placeholder="Full Name" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="text" name="phone" placeholder="Phone" required>
-            <input type="text" name="address" placeholder="Address" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <p id="password-error" class="error-message"></p>  <!-- Error message here -->
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-
-            <button type="submit">Sign Up</button>
+            <div class="form-columns">
+                <div class="form-column">
+                    {% for field in form %}
+                        {% if field.name in 'full_name,email,password,confirm_password' %}
+                            <div class="form-group">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="help-text">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <span class="error-message">{{ field.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="form-column">
+                    {% for field in form %}
+                        {% if field.name in 'phone,address,photo' %}
+                            <div class="form-group">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="help-text">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <span class="error-message">{{ field.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="signup-button">Sign Up</button>
         </form>
     {% endif %}
 
-    <p>Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
-
-    <!-- Google Sign-Up -->
-    <p>Or sign up with Google:</p>
-    <a href="{% provider_login_url 'google' %}">
-        <button type="button">Sign Up with Google</button>
-    </a>
+    <p class="signin-link">Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
 </div>
 
-<!-- JavaScript for password validation -->
+<div class="message-container">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const signupForm = document.getElementById("signup-form");
-        const passwordInput = document.querySelector('input[name="password"]');
-        const confirmPasswordInput = document.querySelector('input[name="confirm_password"]');
-        const passwordError = document.getElementById("password-error");
+    document.addEventListener("DOMContentLoaded", function() {
+        const messages = document.querySelector(".messages");
+        if (messages) {
+            setTimeout(() => {
+                messages.style.opacity = "0";
+                setTimeout(() => {
+                    messages.style.display = "none";
+                }, 500);
+            }, 5000);
+        }
 
-        signupForm.addEventListener("submit", function (event) {
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
+        const otpInput = document.getElementById("otp-input");
+        if (otpInput) {
+            otpInput.focus();
+        }
 
-            // Password validation regex
-            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[ -/:-@\[-`{-~]).{6,64}$/;
+        const resendBtn = document.getElementById("resend-otp");
+        if (resendBtn && !resendBtn.disabled) {
+            let timer = 30;
+            resendBtn.disabled = true;
 
-            if (!passwordPattern.test(password)) {
-                passwordError.textContent = "Password must have uppercase, lowercase, number, special character (8-15 chars).";
-                event.preventDefault();
-                return;
-            } else {
-                passwordError.textContent = "";
+            function updateButton() {
+                if (timer > 0) {
+                    resendBtn.textContent = `Resend OTP (${timer}s)`;
+                    timer--;
+                    setTimeout(updateButton, 1000);
+                } else {
+                    resendBtn.textContent = "Resend OTP";
+                    resendBtn.disabled = false;
+                }
             }
 
-            if (password !== confirmPassword) {
-                alert("Passwords do not match!");
-                event.preventDefault();
-            }
-        });
+            updateButton();
+        }
     });
 </script>
-
 </body>
 </html>

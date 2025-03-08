@@ -25,23 +25,19 @@ SECRET_KEY = 'django-insecure-qj9g143ss0l$x_z6%1f+^x0ux^8v2&le@uv2f))0*mrza3n(a$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.sites',  # Required for django-allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
     'django.contrib.auth',
     'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'inventory',
     'supplier',
     'pos',
@@ -58,26 +54,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
 ]
-
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 ]
-
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-        'APP': {
-            'client_id': '991069191736-4i33kb61v075sodvoldkkadans5cfrvg.apps.googleusercontent.com',
-            'secret': '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',
-            'key': ''
-        }
-    }
-}
 
 
 
@@ -85,12 +66,20 @@ LOGIN_URL = '/employees/login/'
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
 LOGOUT_REDIRECT_URL = '/employees/login/'
 
+
 ROOT_URLCONF = 'inventory_management_system.urls'
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'employees', 'static'),
+    os.path.join(BASE_DIR, 'static')
+]
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'employees', 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'employees', 'templates'),os.path.join(BASE_DIR, 'inventory', 'templates'),
+                 os.path.join(BASE_DIR, 'pos', 'templates'),os.path.join(BASE_DIR, 'supplier', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -153,10 +142,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'employees', 'static'),
-]
 
 
 # Default primary key field type

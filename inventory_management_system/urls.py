@@ -22,6 +22,9 @@ import employees.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('employees/', include('employees.urls')),
-    path('accounts/', include('allauth.urls')),  # Add this line
     path('',include(employees.urls)),
+    path('inventory/',include('inventory.urls')),
+    path('pos/',include('pos.urls')),
+    path('supplier/',include('supplier.urls')),
+
 ]

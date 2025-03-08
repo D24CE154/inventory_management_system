@@ -1,40 +1,75 @@
-{#{% extends 'base.html' %}#}
 {% load static %}
-{% load socialaccount %}
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="{% static 'login.css' %}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="container">
-    <h1>Sign In</h1>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sign In</button>
-    </form>
-    <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
-    <!-- Google Sign-In -->
-    <p>Or sign in with Google:</p>
-    <a href="{% provider_login_url 'google' %}">
-        <button type="button">Sign In with Google</button>
-    </a>
+<div class="login-container">
+    <div class="login-header">
+        <h1>Sign In</h1>
+    </div>
 
-</div>
-</body>
-{% if messages %}
-    <script>
-        window.onload = function() {
+    <div class="form-wrapper">
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_email">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <span class="error-message">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <span class="error-message">{{ form.password.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="submit-btn">Sign In</button>
+        </form>
+    </div>
+
+    <div class="login-footer">
+        <p>Don't have an account? <a href="{% url 'signup' %}" class="signup-link">Sign Up</a></p>
+    </div>
+
+    <!-- Popup Error Messages -->
+    {% if messages %}
+        <div id="message-container" class="popup-message">
             {% for message in messages %}
-                alert("{{ message }}");
+                <p class="{{ message.tags }}">{{ message }}</p>
             {% endfor %}
-        };
-    </script>
-{% endif %}
+        </div>
+    {% endif %}
+</div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const popup = document.getElementById("message-container");
+        if (popup) {
+            setTimeout(() => {
+                popup.style.opacity = "0";
+                setTimeout(() => {
+                    popup.style.display = "none";
+                }, 500);
+            }, 5000);
+        }
+    });
+</script>
+
+</body>
 </html>
