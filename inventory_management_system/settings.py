@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'inventory',
     'supplier',
     'pos',
@@ -68,7 +67,8 @@ LOGOUT_REDIRECT_URL = '/employees/login/'
 
 
 ROOT_URLCONF = 'inventory_management_system.urls'
-
+PROFILE_PICS_URL = '/profile_pics/'
+PROFILE_PICS_ROOT = os.path.join(BASE_DIR, 'profile_pics')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employees', 'static'),

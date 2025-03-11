@@ -1,22 +1,24 @@
 import time
 import random
+from django.contrib.auth import login,logout
+from django.utils.timezone import now
+from django.core.files.storage import default_storage
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password, check_password
-from django.core.files.storage import default_storage
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Employee
 from .forms import SignupForm, LoginForm
+from django.contrib.auth.models import User
+from django.core.files import File
 
-OTP_EXPIRY_SECONDS = 300
+OTP_EXPIRY_SECONDS = 300  # 5 minutes expiry
 OTP_RESEND_LIMIT = 3
 
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp_email(email, otp):
-    """Sends OTP to the given email address."""
     subject = 'Your OTP for Account Verification'
     message = f'Your OTP for account verification is: {otp}. Valid for 5 minutes.'
     from_email = settings.EMAIL_HOST_USER
@@ -29,77 +31,103 @@ def send_otp_email(email, otp):
         print(f"Email sending failed: {e}")
         return False
 
-def signup_view(request):
-    if request.method == "POST":
-        if "otp" in request.POST:
-            entered_otp = request.POST.get("otp")
-            if not request.session.get("signup_data"):
-                messages.error(request, "Session expired. Please sign up again.")
-                return redirect("signup")
 
-            if time.time() - request.session.get("otp_timestamp", 0) > OTP_EXPIRY_SECONDS:
-                messages.error(request, "OTP has expired. Request a new one.")
-                return render(request, "signup.html", {"otp_sent": True, "otp_expired": True})
+def verify_otp(request):
+    if request.method == "POST" and "otp" in request.POST:
+        entered_otp = request.POST.get("otp")
 
-            if request.session["otp"] == entered_otp:
-                signup_data = request.session.get("signup_data")
+        if not request.session.get("signup_data"):
+            messages.error(request, "Session expired. Please sign up again.")
+            return redirect("signup")
 
-                employee = Employee(
-                    full_name=signup_data["full_name"],
-                    email=signup_data["email"],
-                    phone=signup_data["phone"],
-                    address=signup_data["address"],
-                    password=make_password(signup_data["password"])
-                )
+        stored_otp = request.session.get("otp")
+        otp_timestamp = request.session.get("otp_timestamp", 0)
 
-                if 'photo_path' in request.session:
-                    employee.photo = request.session['photo_path']
+        if time.time() - otp_timestamp > OTP_EXPIRY_SECONDS:
+            messages.error(request, "OTP has expired. Request a new one.")
+            return render(request, "signup.html", {"otp_sent": True, "otp_expired": True})
 
-                employee.save()
-                request.session.flush()
-                messages.success(request, "Signup successful! Please log in.")
-                return redirect("login")
-
-            messages.error(request, "Invalid OTP. Try again.")
+        if entered_otp != stored_otp:
+            messages.error(request, "Invalid OTP. Please try again.")
             return render(request, "signup.html", {"otp_sent": True})
 
-        else:  # If signup form is submitted
-            form = SignupForm(request.POST, request.FILES)
-            if form.is_valid():
-                # Don't save the form yet, just get the data
-                employee = form.save(commit=False)
+        signup_data = request.session.get("signup_data")
 
-                email = form.cleaned_data["email"]
-                otp = generate_otp()
+        try:
+            # Create and Save User
+            user = User.objects.create_user(
+                username=signup_data["email"],
+                email=signup_data["email"],
+                password=signup_data["password"],  # Django automatically hashes it
+                is_active=True
+            )
+            user.save()
 
-                # Save form data to session
-                request.session["signup_data"] = {
-                    "full_name": form.cleaned_data["full_name"],
-                    "email": form.cleaned_data["email"],
-                    "phone": form.cleaned_data["phone"],
-                    "address": form.cleaned_data["address"],
-                    "password": form.cleaned_data["password"],
-                }
+            # Create Employee instance linked to User
+            employee = Employee(
+                user=user,
+                full_name=signup_data["full_name"],
+                phone=signup_data["phone"],
+                role="Sales Executive",
+                address=signup_data["address"],
+                is_active=True
+            )
 
-                if 'photo' in request.FILES:
-                    photo = request.FILES['photo']
-                    # Store the file path in profile_pics folder in session
-                    file_name = default_storage.save(f'profile_pics/{photo.name}', photo)
-                    request.session['photo_path'] = file_name
+            # Assign saved photo if available
+            if "photo_path" in request.session:
+                photo_path = request.session["photo_path"]
+                with default_storage.open(photo_path, "rb") as photo_file:
+                    employee.photo.save(photo_path, File(photo_file))
 
-                if send_otp_email(email, otp):
-                    request.session["otp"] = otp
-                    request.session["otp_timestamp"] = time.time()
-                    request.session["otp_resend_attempts"] = 0
-                    messages.success(request, "OTP sent to your email successfully!")
-                    return render(request, "signup.html", {"otp_sent": True})
+            employee.save()
 
-                messages.error(request, "Failed to send OTP. Please try again.")
+            request.session.flush()
+            messages.success(request, "Signup successful! Please log in.")
+            return redirect("login")
 
-    else:
-        form = SignupForm()
+        except Exception as e:
+            messages.error(request, f"Error during signup: {e}")
+            return redirect("signup")
 
-    return render(request, "signup.html", {"form": form})
+    return redirect("signup")
+
+def signup_view(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST, request.FILES)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            otp = generate_otp()
+
+            request.session["signup_data"] = {
+                "full_name": form.cleaned_data["full_name"],
+                "email": email,
+                "phone": form.cleaned_data["phone"],
+                "address": form.cleaned_data["address"],
+                "password": form.cleaned_data["password"],
+            }
+
+            if "photo" in request.FILES:
+                photo = request.FILES["photo"]
+                file_name = default_storage.save(f'profile_pics/{form.cleaned_data["phone"]}_pfp.jpg', photo)
+                request.session["photo_path"] = file_name
+
+            request.session["otp"] = otp
+            request.session["otp_timestamp"] = time.time()
+            request.session["otp_resend_attempts"] = 0
+
+            if send_otp_email(email, otp):
+                messages.success(request, "OTP sent to your email successfully!")
+                return render(request, "signup.html", {"otp_sent": True})
+
+            messages.error(request, "Failed to send OTP. Please try again.")
+        else:
+            print("\n🔹 DEBUG: Form validation errors:", form.errors)  # 🔥 Debugging line
+            messages.error(request, "Form submission failed. Please correct the errors below.")
+
+        return render(request, "signup.html", {"form": form})
+
+    return render(request, "signup.html", {"form": SignupForm()})
+
 
 def resend_otp(request):
     if not request.session.get("signup_data"):
@@ -112,54 +140,83 @@ def resend_otp(request):
         return render(request, "signup.html", {"otp_sent": True})
 
     email = request.session["signup_data"]["email"]
-    otp = generate_otp()  # Generate new OTP
+    current_time = time.time()
+    otp_expiry = request.session.get("otp_timestamp", 0) + OTP_EXPIRY_SECONDS
+
+    if current_time < otp_expiry:
+        otp = request.session["otp"]
+        remaining_time = int(otp_expiry - current_time)
+    else:
+        otp = generate_otp()
+        request.session["otp"] = otp
+        request.session["otp_timestamp"] = current_time
+        remaining_time = OTP_EXPIRY_SECONDS
 
     if send_otp_email(email, otp):
-        request.session["otp"] = otp
-        request.session["otp_timestamp"] = time.time()
         request.session["otp_resend_attempts"] = resend_attempts + 1
-        messages.success(request, "OTP resent successfully!")
+        messages.success(request, f"OTP resent successfully! It is valid for {remaining_time // 60} min {remaining_time % 60} sec.")
     else:
         messages.error(request, "Failed to resend OTP. Try again.")
 
-    return render(request, "signup.html", {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
+    return render(request, 'signup.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
 
 # Login View (Using Email as Login ID)
 def login_view(request):
-    form = LoginForm(request.POST or None)
+    login_form = LoginForm(request.POST or None)  # Ensure form is always available
 
-    if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password"]
+    if request.method == "POST" and login_form.is_valid():
+        email = login_form.cleaned_data["email"]
+        password = login_form.cleaned_data["password"]
 
         try:
-            user = Employee.objects.get(email=email)
-            if check_password(password, user.password):
-                # Create a session for the user (alternative to using django's auth system)
-                request.session['user_id'] = user.employee_id
-                request.session['user_name'] = user.full_name
-                request.session['user_role'] = user.role
-
-                return redirect_based_on_role(user)
-            else:
-                messages.error(request, "Invalid password.")
-        except Employee.DoesNotExist:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
             messages.error(request, "User not found.")
+            return render(request, "login.html", {"login_form": login_form})
 
-    return render(request, "login.html", {"form": form})
+        if user and user.check_password(password):
+            if user.is_active:
+                try:
+
+                    employee = Employee.objects.get(user=user)
+                    user.last_login = now()
+                    user.save(update_fields=["last_login"])
+
+                    request.session["email"] = user.email
+                    request.session["full_name"] = employee.full_name
+                    request.session["photo"] = employee.photo.url if employee.photo else None
+                except Employee.DoesNotExist:
+                    messages.error(request, "Employee does not exist.")
+                    return render(request, "signup.html", {"signup_form": SignupForm()})
+
+                login(request, user)
+                return redirect_based_on_role(employee)
+            else:
+                messages.error(request, "Account not activated. Please verify your email.")
+        else:
+            messages.error(request, "Invalid email or password.")
+
+    return render(request, "login.html", {"login_form": login_form})
 
 # Logout View
 def logout_view(request):
+    logout(request)
     request.session.flush()
-    return redirect("login")
+    response = redirect("login")
+    response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response["Pragma"] = "no-cache"
+    response["Expires"] = "0"
+
+    return response
 
 # Redirect Based on Role
-def redirect_based_on_role(user):
-    if user.role == "Admin":
+def redirect_based_on_role(employee):
+
+    if employee.role == "Admin":
         return redirect("adminDashboard")
-    elif user.role == "Inventory Manager":
+    elif employee.role == "Inventory Manager":
         return redirect("inventoryManagerDashboard")
-    elif user.role == "Sales Executive":
+    elif employee.role == "Sales Executive":
         return redirect("salesExecutiveDashboard")
     else:
         return redirect("login")

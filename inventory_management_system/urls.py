@@ -16,9 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path ,include
-
 import employees.urls
-
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('employees/', include('employees.urls')),
@@ -26,5 +26,6 @@ urlpatterns = [
     path('inventory/',include('inventory.urls')),
     path('pos/',include('pos.urls')),
     path('supplier/',include('supplier.urls')),
-
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.PROFILE_PICS_URL, document_root=settings.PROFILE_PICS_ROOT)

@@ -23,8 +23,8 @@
             <h2>Email Verification</h2>
             <p class="otp-info">We've sent a verification code to your email <strong>{{ request.session.signup_data.email }}</strong></p>
 
-            <form method="POST" class="centered-form">
-                {% csrf_token %}
+            <form method="POST" action="{% url 'verify_otp' %}" class="centered-form">
+            {% csrf_token %}
                 <div class="form-group">
                     <label for="otp-input">Enter OTP</label>
                     <input type="text" id="otp-input" name="otp" placeholder="6-digit OTP" maxlength="6" required>
@@ -119,22 +119,63 @@
         }
 
         const resendBtn = document.getElementById("resend-otp");
-        if (resendBtn && !resendBtn.disabled) {
-            let timer = 30;
-            resendBtn.disabled = true;
+        if (resendBtn) {
+            // Check if there are maximum attempts reached
+            const maxAttemptsReached = resendBtn.textContent.trim() === "Maximum attempts reached";
+
+            if (maxAttemptsReached) {
+                resendBtn.disabled = true;
+                // Clear localStorage when max attempts reached
+                localStorage.removeItem("otpTimer");
+                localStorage.removeItem("otpTimerStart");
+                return;
+            }
+
+            // Check if timer is already running from localStorage
+            let timer = parseInt(localStorage.getItem("otpTimer")) || 30;
+            const timerStarted = localStorage.getItem("otpTimerStart") === "true";
+
+            if (timerStarted && timer > 0) {
+                // Timer was already running, continue from saved state
+                resendBtn.disabled = true;
+                updateButton();
+            } else if (!timerStarted) {
+                // Only start a new timer if one wasn't already running
+                // This prevents reset on incorrect OTP submission
+                timer = 30;
+                localStorage.setItem("otpTimer", timer);
+                localStorage.setItem("otpTimerStart", "true");
+                resendBtn.disabled = true;
+                updateButton();
+            } else {
+                // Timer was previously completed
+                resendBtn.textContent = "Resend OTP";
+                resendBtn.disabled = false;
+            }
+
+            // Add click event to restart timer when button is clicked
+            resendBtn.addEventListener("click", function() {
+                if (!resendBtn.disabled) {
+                    timer = 30;
+                    localStorage.setItem("otpTimer", timer);
+                    localStorage.setItem("otpTimerStart", "true");
+                    resendBtn.disabled = true;
+                    updateButton();
+                }
+            });
 
             function updateButton() {
                 if (timer > 0) {
                     resendBtn.textContent = `Resend OTP (${timer}s)`;
                     timer--;
+                    localStorage.setItem("otpTimer", timer);
                     setTimeout(updateButton, 1000);
                 } else {
                     resendBtn.textContent = "Resend OTP";
                     resendBtn.disabled = false;
+                    localStorage.setItem("otpTimerStart", "false");
                 }
             }
-
-            updateButton();
         }
     });
 </script>
