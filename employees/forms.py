@@ -97,3 +97,21 @@ class LoginForm(forms.Form):
         required=True
     )
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Enter password'}))
+
+class ForgotPassword(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter email'}),
+        required = True
+    )
+
+class ResetPasswordForm(SignupForm):
+
+    class Meta:
+        model = Employee
+        fields = ["password", "confirm_password"]
+
+    def __init__(self, *args, **kwargs):
+        """Remove unnecessary fields from SignupForm."""
+        super().__init__(*args, **kwargs)
+        for field in ["email", "phone", "full_name", "address", "photo"]:
+            self.fields.pop(field, None)

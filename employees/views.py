@@ -1,16 +1,22 @@
 import time
 import random
 from django.contrib.auth import login,logout
-from django.utils.timezone import now
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
+from django.urls import reverse
+from django.utils.timezone import now,timedelta
 from django.core.files.storage import default_storage
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Employee
-from .forms import SignupForm, LoginForm
+from .forms import SignupForm, LoginForm, ForgotPassword,ResetPasswordForm
 from django.contrib.auth.models import User
 from django.core.files import File
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
 
 OTP_EXPIRY_SECONDS = 300  # 5 minutes expiry
 OTP_RESEND_LIMIT = 3
@@ -30,7 +36,6 @@ def send_otp_email(email, otp):
     except Exception as e:
         print(f"Email sending failed: {e}")
         return False
-
 
 def verify_otp(request):
     if request.method == "POST" and "otp" in request.POST:
@@ -128,7 +133,6 @@ def signup_view(request):
 
     return render(request, "signup.html", {"form": SignupForm()})
 
-
 def resend_otp(request):
     if not request.session.get("signup_data"):
         messages.error(request, "Session expired. Please sign up again.")
@@ -160,7 +164,6 @@ def resend_otp(request):
 
     return render(request, 'signup.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
 
-# Login View (Using Email as Login ID)
 def login_view(request):
     login_form = LoginForm(request.POST or None)  # Ensure form is always available
 
@@ -199,6 +202,7 @@ def login_view(request):
     return render(request, "login.html", {"login_form": login_form})
 
 # Logout View
+@login_required(login_url="login")
 def logout_view(request):
     logout(request)
     request.session.flush()
@@ -209,7 +213,82 @@ def logout_view(request):
 
     return response
 
+def forgot_password_view(request):
+    if request.method == 'POST':
+        forgot_password_form = ForgotPassword(request.POST)
+        if forgot_password_form.is_valid():
+            email = forgot_password_form.cleaned_data['email']
+
+            try:
+                user = User.objects.get(email=email)
+                employee = Employee.objects.get(user=user)  # Get Employee profile
+
+                # Check if a reset request was made within the last hour
+                if employee.last_password_reset and (now() - employee.last_password_reset) < timedelta(hours=1):
+                    print("\n✅ DEBUG: Resending the same password reset link.")  # 🔥 Debugging
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    token = default_token_generator.make_token(user)
+                    reset_link = request.build_absolute_uri(reverse("reset_password", args=[uid, token]))
+
+                else:
+                    print("\n✅ DEBUG: Generating a new password reset link.")  # 🔥 Debugging
+                    # Generate new reset link
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    token = default_token_generator.make_token(user)
+                    reset_link = request.build_absolute_uri(reverse("reset_password", args=[uid, token]))
+
+                    # Update last password reset timestamp
+                    employee.last_password_reset = now()
+                    employee.save()
+
+                # Send reset email
+                send_mail(
+                    "Password Reset Request",
+                    f"Click the link to reset your password: {reset_link}",
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently=False,
+                )
+
+                messages.success(request, "Password reset email sent!")
+                return redirect("login")
+
+            except User.DoesNotExist:
+                messages.error(request, "No account found with this email.")
+                return redirect("forgot_password")
+
+    else:
+        forgot_password_form = ForgotPassword()
+
+    return render(request, 'forgot_password.html', {'form': forgot_password_form})
+
+def reset_password_view(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+
+        if not default_token_generator.check_token(user, token):
+            messages.error(request, "Invalid or expired reset link.")
+            return redirect("forgot_password")
+
+    except (User.DoesNotExist, ValueError, TypeError):
+        messages.error(request, "Invalid reset request.")
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        form = ResetPasswordForm(request.POST)
+        if form.is_valid():
+            user.set_password(form.cleaned_data["password"])  # ✅ Secure password hashing
+            user.save()
+            messages.success(request, "Password reset successful! Please log in.")
+            return redirect("login")
+    else:
+        form = ResetPasswordForm()
+
+    return render(request, "reset-password.html", {"form": form})
 # Redirect Based on Role
+
+@login_required(login_url="login")
 def redirect_based_on_role(employee):
 
     if employee.role == "Admin":

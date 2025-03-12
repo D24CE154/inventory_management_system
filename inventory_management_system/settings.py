@@ -65,11 +65,17 @@ LOGIN_URL = '/employees/login/'
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
 LOGOUT_REDIRECT_URL = '/employees/login/'
 
+PASSWORD_RESET_TIMEOUT = 3600
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 1800
+SESSION_SAVE_EVERY_REQUEST = True
 
 ROOT_URLCONF = 'inventory_management_system.urls'
 PROFILE_PICS_URL = '/profile_pics/'
 PROFILE_PICS_ROOT = os.path.join(BASE_DIR, 'profile_pics')
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employees', 'static'),
     os.path.join(BASE_DIR, 'static')

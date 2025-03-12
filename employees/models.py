@@ -20,6 +20,7 @@ class Employee(models.Model):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
+    last_password_reset = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.role}"
