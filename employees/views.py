@@ -279,7 +279,7 @@ def logout_view(request):
     request.session.flush()
     return redirect('login')
 
-@login_required(login_url="login")
+@login_required()
 def redirect_based_on_role(request):
     try:
         employee = Employee.objects.get(user=request.user)
