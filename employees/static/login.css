@@ -198,6 +198,7 @@ body {
         font-size: 15px;
     }
 }
+
 .forgot-password-link {
     color: var(--primary-color);
     text-decoration: none;
@@ -208,4 +209,31 @@ body {
 
 .forgot-password-link:hover {
     text-decoration: underline;
+}
+
+.password-field-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    color: #555;
+    font-size: 16px;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+.password-toggle:hover {
+    color: #000;
 }

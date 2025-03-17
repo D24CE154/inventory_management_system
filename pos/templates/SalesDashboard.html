@@ -5,10 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Dashboard</title>
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'login.css' %}">
+    <link rel="stylesheet" href="{% static 'Dashboard.css' %}">
 </head>
-<body class="bg-gray-100 h-screen antialiased">
+<body class="bg-gray-100 h-screen antialiasing">
 
 <div class="flex h-full">
 
@@ -45,18 +44,18 @@
                         {% if photo %}
                             <img src="{{ photo }}" alt="Profile" class="w-8 h-8 rounded-full">
                         {% else %}
-                            <img src="{% static 'default_profile.jpg' %}" alt="Profile" class="w-8 h-8 rounded-full">
+                            <img src="{% static 'profile_pics/reddit avtar.png' %}" alt="Profile" class="w-8 h-8 rounded-full">
                         {% endif %}
                         <span class="font-semibold">{{ full_name }}</span>
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <path> stroke-linecap ="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"</path>
                         </svg>
                     </button>
 
                     <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg hidden">
                         <a href="#" class="block px-4 py-2 hover:bg-gray-200">Profile</a>
                         <a href="#" class="block px-4 py-2 hover:bg-gray-200">Settings</a>
-                        <a href="{% url 'login' %}" class="block px-4 py-2 hover:bg-gray-200">Logout</a>
+                        <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-200">Logout</a>
                     </div>
                 </div>
             </div>

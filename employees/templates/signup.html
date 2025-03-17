@@ -12,7 +12,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-</head>
+    <style>
+        .password-field-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+            color: #555;
+            font-size: 16px;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        .password-toggle:focus {
+            outline: none;
+        }
+        .password-toggle:hover {
+            color: #000;
+        }
+    </style>
 </head>
 <body>
 <div class="signup-container">
@@ -24,7 +48,7 @@
             <p class="otp-info">We've sent a verification code to your email <strong>{{ request.session.signup_data.email }}</strong></p>
 
             <form method="POST" action="{% url 'verify_otp' %}" class="centered-form">
-            {% csrf_token %}
+                {% csrf_token %}
                 <div class="form-group">
                     <label for="otp-input">Enter OTP</label>
                     <input type="text" id="otp-input" name="otp" placeholder="6-digit OTP" maxlength="6" required>
@@ -53,10 +77,24 @@
             <div class="form-columns">
                 <div class="form-column">
                     {% for field in form %}
-                        {% if field.name in 'full_name,email,password,confirm_password' %}
+                        {% if field.name in 'full_name,email' %}
                             <div class="form-group">
                                 {{ field.label_tag }}
                                 {{ field }}
+                                {% if field.help_text %}
+                                    <small class="help-text">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <span class="error-message">{{ field.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+                        {% elif field.name == 'password' or field.name == 'confirm_password' %}
+                            <div class="form-group">
+                                {{ field.label_tag }}
+                                <div class="password-field-wrapper">
+                                    {{ field }}
+                                    <button type="button" class="password-toggle" onclick="togglePassword('id_{{ field.name }}')">👁️</button>
+                                </div>
                                 {% if field.help_text %}
                                     <small class="help-text">{{ field.help_text }}</small>
                                 {% endif %}
@@ -100,6 +138,9 @@
         </ul>
     {% endif %}
 </div>
+
+<!-- Include shared password toggle script -->
+<script src="{% static 'showPassword.js' %}"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

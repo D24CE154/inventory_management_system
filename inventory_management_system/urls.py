@@ -17,8 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path ,include
 import employees.urls
-from django.conf import settings
-from django.conf.urls.static import static
+from employees.views import error_403_view,error_404_view,error_500_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('employees/', include('employees.urls')),
@@ -27,5 +26,7 @@ urlpatterns = [
     path('pos/',include('pos.urls')),
     path('supplier/',include('supplier.urls')),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.PROFILE_PICS_URL, document_root=settings.PROFILE_PICS_ROOT)
+
+handler404 = 'employees.views.error_404_view'
+handler403 = 'employees.views.error_403_view'
+handler500 = 'employees.views.error_500_view'

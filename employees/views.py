@@ -1,3 +1,4 @@
+import datetime
 import time
 import random
 from django.contrib.auth import login,logout
@@ -18,7 +19,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 
-OTP_EXPIRY_SECONDS = 300  # 5 minutes expiry
+OTP_EXPIRY_SECONDS = 300
 OTP_RESEND_LIMIT = 3
 
 def generate_otp():
@@ -59,16 +60,14 @@ def verify_otp(request):
         signup_data = request.session.get("signup_data")
 
         try:
-            # Create and Save User
             user = User.objects.create_user(
                 username=signup_data["email"],
                 email=signup_data["email"],
-                password=signup_data["password"],  # Django automatically hashes it
+                password=signup_data["password"],
                 is_active=True
             )
             user.save()
 
-            # Create Employee instance linked to User
             employee = Employee(
                 user=user,
                 full_name=signup_data["full_name"],
@@ -78,14 +77,12 @@ def verify_otp(request):
                 is_active=True
             )
 
-            # Assign saved photo if available
             if "photo_path" in request.session:
                 photo_path = request.session["photo_path"]
                 with default_storage.open(photo_path, "rb") as photo_file:
                     employee.photo.save(photo_path, File(photo_file))
 
             employee.save()
-
             request.session.flush()
             messages.success(request, "Signup successful! Please log in.")
             return redirect("login")
@@ -165,7 +162,7 @@ def resend_otp(request):
     return render(request, 'signup.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
 
 def login_view(request):
-    login_form = LoginForm(request.POST or None)  # Ensure form is always available
+    login_form = LoginForm(request.POST or None)
 
     if request.method == "POST" and login_form.is_valid():
         email = login_form.cleaned_data["email"]
@@ -200,18 +197,6 @@ def login_view(request):
             messages.error(request, "Invalid email or password.")
 
     return render(request, "login.html", {"login_form": login_form})
-
-# Logout View
-@login_required(login_url="login")
-def logout_view(request):
-    logout(request)
-    request.session.flush()
-    response = redirect("login")
-    response["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response["Pragma"] = "no-cache"
-    response["Expires"] = "0"
-
-    return response
 
 def forgot_password_view(request):
     if request.method == 'POST':
@@ -286,19 +271,42 @@ def reset_password_view(request, uidb64, token):
         form = ResetPasswordForm()
 
     return render(request, "reset-password.html", {"form": form})
-# Redirect Based on Role
+
 
 @login_required(login_url="login")
-def redirect_based_on_role(employee):
+def logout_view(request):
+    logout(request)
+    request.session.flush()
+    return redirect('login')
 
-    if employee.role == "Admin":
-        return redirect("adminDashboard")
-    elif employee.role == "Inventory Manager":
-        return redirect("inventoryManagerDashboard")
-    elif employee.role == "Sales Executive":
-        return redirect("salesExecutiveDashboard")
-    else:
-        return redirect("login")
+@login_required(login_url="login")
+def redirect_based_on_role(request):
+    try:
+        employee = Employee.objects.get(user=request.user)
+        if employee.role == "Admin":
+            return redirect("adminDashboard")
+        elif employee.role == "Inventory Manager":
+            return redirect("inventoryManagerDashboard")
+        elif employee.role == "Sales Executive":
+            return redirect("salesExecutiveDashboard")
+        else:
+            messages.error(request, "Unauthorized access.")
+            return redirect("error_403")
+    except Employee.DoesNotExist:
+        messages.error(request, "User profile not found.")
+        return redirect("error_404")
+
+def error_404_view(request):
+    return render(request, 'errors/404.html', status=404)
+
+def error_403_view(request):
+    return render(request, 'errors/403.html', status=403)
+
+def error_500_view(request):
+    context = {
+        'timestamp': datetime.datetime.now(),
+    }
+    return render(request, 'errors/500.html', context, status=500)
 
 def adminDashboard(request):
     return render(request, 'AdminDashboard.html')
