@@ -3,7 +3,6 @@ import time
 import random
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from django.utils.timezone import now,timedelta
 from django.core.files.storage import default_storage
@@ -123,7 +122,6 @@ def signup_view(request):
 
             messages.error(request, "Failed to send OTP. Please try again.")
         else:
-            print("\n🔹 DEBUG: Form validation errors:", form.errors)  # 🔥 Debugging line
             messages.error(request, "Form submission failed. Please correct the errors below.")
 
         return render(request, "signup.html", {"form": form})
@@ -296,17 +294,17 @@ def redirect_based_on_role(request):
         messages.error(request, "User profile not found.")
         return redirect("error_404")
 
-def error_404_view(request):
+def error_404_view(request,exception=404):
     return render(request, 'errors/404.html', status=404)
 
-def error_403_view(request):
+def error_403_view(request,exception=403):
     return render(request, 'errors/403.html', status=403)
 
-def error_500_view(request):
+def error_500_view(request,exception=500):
     context = {
         'timestamp': datetime.datetime.now(),
     }
     return render(request, 'errors/500.html', context, status=500)
 
 def adminDashboard(request):
-    return render(request, 'AdminDashboard.html')
+    return render(request, 'admin_dashboard.html')

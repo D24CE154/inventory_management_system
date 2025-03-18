@@ -1,113 +1,262 @@
+{% extends 'base_dashboard.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Dashboard</title>
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'Dashboard.css' %}">
-</head>
-<body class="bg-gray-100 h-screen antialiased">
 
-<div class="flex h-full">
+{% block title %}Inventory Dashboard | Inventory Management System{% endblock %}
 
-    <aside class="w-64 bg-white shadow-md hidden lg:block">
-        <div class="p-4">
-            <h1 class="text-xl font-semibold">Inventory</h1>
+{% block breadcrumb %}
+    <span class="current">Inventory Dashboard</span>
+{% endblock %}
+
+{% block page_title %}Inventory Dashboard{% endblock %}
+
+{% block content %}
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Total Products</h3>
+                <div class="metric-icon blue">
+                    <i class="fas fa-boxes"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">{{ product_count|default:"0" }}</h2>
+            <div class="metric-change positive">
+                <i class="fas fa-arrow-up mr-1"></i> 5% from last month
+            </div>
         </div>
-        <nav>
-            <ul>
-                <li class="p-4 hover:bg-gray-200"><a href="#">Dashboard</a></li>
-                <li class="p-4 hover:bg-gray-200"><a href="{% url 'inventory:inventory_page' %}">Inventory</a></li>
-                <li class="p-4 hover:bg-gray-200"><a href="#">Sales</a></li>
-                <li class="p-4 hover:bg-gray-200"><a href="#">Purchases</a></li>
-                <li class="p-4 hover:bg-gray-200"><a href="#">Customers</a></li>
-                <li class="p-4 hover:bg-gray-200"><a href="{% url 'supplier:supplier_page' %}">Suppliers</a></li>
-            </ul>
-        </nav>
-    </aside>
 
-    <main class="flex-1 h-screen overflow-x-hidden overflow-y-auto p-6 lg:ml-64">
-
-        <header class="bg-white shadow p-4 mb-6 flex justify-between items-center rounded-lg">
-            <h2 class="text-2xl font-semibold">Dashboard</h2>
-
-            <div class="relative w-1/3">
-                <input type="text" placeholder="Search..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="absolute top-2 right-3 w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0a8.5 8.5 0 1 0-12.1 0 8.5 8.5 0 0 0 12.1 0z" />
-                </svg>
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Low Stock Items</h3>
+                <div class="metric-icon orange">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
             </div>
+            <h2 class="metric-value">{{ low_stock_count|default:"0" }}</h2>
+            <div class="metric-change negative">
+                <i class="fas fa-arrow-up mr-1"></i> 12% from last month
+            </div>
+        </div>
 
-            <div class="flex items-center space-x-4">
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Out of Stock</h3>
+                <div class="metric-icon red">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">{{ out_of_stock_count|default:"0" }}</h2>
+            <div class="metric-change negative">
+                <i class="fas fa-arrow-up mr-1"></i> 3% from last month
+            </div>
+        </div>
 
-                <div class="relative">
-                    <button class="flex items-center space-x-2 bg-gray-200 p-2 rounded-lg">
-                        <img src="{% static 'profile.svg' %}" alt="Profile" class="w-8 h-8 rounded-full">
-                        <span class="font-semibold">User</span>
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Inventory Value</h3>
+                <div class="metric-icon green">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">₹{{ inventory_value|default:"0" }}</h2>
+            <div class="metric-change positive">
+                <i class="fas fa-arrow-up mr-1"></i> 8% from last month
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Stock Levels by Category</h3>
+                <div class="chart-actions">
+                    <button class="text-sm border rounded p-1 px-2 hover:bg-gray-100">
+                        <i class="fas fa-download mr-1"></i> Export
                     </button>
-
-                    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg hidden">
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-200">Profile</a>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-200">Settings</a>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-200">Logout</a>
-                    </div>
                 </div>
             </div>
-        </header>
+            <div class="chart-body">
+                <canvas id="stockLevelChart"></canvas>
+            </div>
+        </div>
 
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white shadow-lg p-6 rounded-lg flex items-center w-full">
-                <img src="{% static 'sales.svg' %}" alt="Sales" class="w-14 h-14 mr-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Total Sales</h3>
-                    <p class="text-gray-600">190</p>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Product Turnover Rate</h3>
+                <div class="chart-actions">
+                    <select class="text-sm border rounded p-1">
+                        <option>Last 30 Days</option>
+                        <option>Last 90 Days</option>
+                        <option>This Year</option>
+                    </select>
                 </div>
             </div>
-            <div class="bg-white shadow-lg p-6 rounded-lg flex items-center w-full">
-                <img src="{% static 'revenue.svg' %}" alt="Revenue" class="w-14 h-14 mr-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Revenue</h3>
-                    <p class="text-gray-600">₹17,58,400</p>
-                </div>
+            <div class="chart-body">
+                <canvas id="turnoverChart"></canvas>
             </div>
-            <div class="bg-white shadow-lg p-6 rounded-lg flex items-center w-full">
-                <img src="{% static 'cost.svg' %}"alt="Cost" class="w-14 h-14 mr-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Cost</h3>
-                    <p class="text-gray-600">₹1,80,116</p>
-                </div>
+        </div>
+    </div>
+
+    <!-- Low Stock & Recent Purchases -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Low Stock Table -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Low Stock Items</h3>
+                <a href="{% url 'low_stock' %}" class="text-sm text-blue-500 hover:underline">View All</a>
             </div>
-            <div class="bg-white shadow-lg p-6 rounded-lg flex items-center w-full">
-                <img src="{% static 'profit.svg' %}" alt="Profit" class="w-14 h-14 mr-4">
-                <div>
-                    <h3 class="text-lg font-semibold">Profit</h3>
-                    <p class="text-gray-600">₹3,45,700</p>
-                </div>
+            <div class="p-4">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Level</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if low_stock_products %}
+                        {% for product in low_stock_products %}
+                            <tr>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.current_stock }}</td>
+                                <td>{{ product.reorder_level }}</td>
+                                <td>
+                                    <span class="status {% if product.current_stock == 0 %}error{% else %}warning{% endif %}">
+                                        {% if product.current_stock == 0 %}Out of Stock{% else %}Low Stock{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'create_purchase_order' %}?product={{ product.id }}" class="text-sm text-blue-500 hover:underline">
+                                        Create Order
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No low stock items found</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
             </div>
-            <div class="bg-white shadow-lg p-6 rounded-lg flex items-center w-full">
-                <img src="{% static 'purchase.svg' %}" alt="Purchases" class="w-14 h-14 mr-4">
-                <div>
-                    <h3 class="text-lg font-semibold">No. of Purchases</h3>
-                    <p class="text-gray-600">345</p>
-                </div>
+        </div>
+
+        <!-- Recent Purchase Orders -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Recent Purchase Orders</h3>
+                <a href="{% url 'purchase_orders' %}" class="text-sm text-blue-500 hover:underline">View All</a>
             </div>
-        </section>
+            <div class="p-4">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Order Date</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if recent_purchase_orders %}
+                        {% for po in recent_purchase_orders %}
+                            <tr>
+                                <td>#{{ po.id }}</td>
+                                <td>{{ po.supplier.name }}</td>
+                                <td>{{ po.order_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="status {% if po.status == 'Received' %}success{% elif po.status == 'Pending' %}warning{% elif po.status == 'Ordered' %}info{% else %}error{% endif %}">
+                                        {{ po.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No recent purchase orders found</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    </main>
+    <!-- Quick Actions -->
+    <div class="chart-card mb-6">
+        <div class="chart-header">
+            <h3 class="chart-title">Quick Actions</h3>
+        </div>
+        <div class="p-6 flex flex-wrap gap-4">
+            <a href="{% url 'add_product' %}" class="dashboard-button button-primary">
+                <i class="fas fa-plus mr-2"></i> Add New Product
+            </a>
+            <a href="{% url 'create_purchase_order' %}" class="dashboard-button button-outline">
+                <i class="fas fa-file-invoice mr-2"></i> Create Purchase Order
+            </a>
+            <a href="{% url 'product_list' %}" class="dashboard-button button-outline">
+                <i class="fas fa-list mr-2"></i> View All Products
+            </a>
+            <a href="{% url 'supplier_list' %}" class="dashboard-button button-outline">
+                <i class="fas fa-truck mr-2"></i> Manage Suppliers
+            </a>
+        </div>
+    </div>
+{% endblock %}
 
-</div>
+{% block extra_js %}
+    <script>
+        // Stock Level Chart
+        const stockLevelCtx = document.getElementById('stockLevelChart').getContext('2d');
+        new Chart(stockLevelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Electronics', 'Clothing', 'Food', 'Home & Garden', 'Others'],
+                datasets: [{
+                    label: 'Current Stock',
+                    data: [120, 85, 40, 70, 35],
+                    backgroundColor: '#1a73e8',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
 
-<script>
-    // Profile Dropdown Toggle
-    document.querySelector('.relative button').addEventListener('click', function() {
-        document.querySelector('.relative div').classList.toggle('hidden');
-    });
-</script>
-
-</body>
-</html>
+        // Turnover Chart
+        const turnoverCtx = document.getElementById('turnoverChart').getContext('2d');
+        new Chart(turnoverCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Fast Moving',
+                    data: [12, 15, 18, 14, 17, 21],
+                    borderColor: '#34a853',
+                    backgroundColor: 'transparent',
+                },
+                    {
+                        label: 'Slow Moving',
+                        data: [5, 4, 3, 6, 2, 4],
+                        borderColor: '#fbbc05',
+                        backgroundColor: 'transparent',
+                    }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+{% endblock %}

@@ -70,10 +70,6 @@ LOGOUT_REDIRECT_URL = '/employees/login/'
 
 PASSWORD_RESET_TIMEOUT = 3600
 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 1800
-SESSION_SAVE_EVERY_REQUEST = True
-
 ROOT_URLCONF = 'inventory_management_system.urls'
 PROFILE_PICS_URL = '/profile_pics/'
 PROFILE_PICS_ROOT = os.path.join(BASE_DIR, 'profile_pics')
@@ -87,8 +83,13 @@ STATICFILES_DIRS = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'employees', 'templates'),os.path.join(BASE_DIR, 'inventory', 'templates'),
-                 os.path.join(BASE_DIR, 'pos', 'templates'),os.path.join(BASE_DIR, 'supplier', 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),  # ✅ Add this line for global templates
+            os.path.join(BASE_DIR, 'employees', 'templates'),
+            os.path.join(BASE_DIR, 'inventory', 'templates'),
+            os.path.join(BASE_DIR, 'pos', 'templates'),
+            os.path.join(BASE_DIR, 'supplier', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -100,6 +101,7 @@ TEMPLATES = [
         },
     },
 ]
+
 WSGI_APPLICATION = 'inventory_management_system.wsgi.application'
 
 
