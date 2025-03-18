@@ -77,14 +77,16 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employees', 'static'),
-    os.path.join(BASE_DIR, 'static')
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'inventory', 'static'),
+    os.path.join(BASE_DIR,'profile_pics')
 ]
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),  # ✅ Add this line for global templates
+            os.path.join(BASE_DIR, 'templates'),
             os.path.join(BASE_DIR, 'employees', 'templates'),
             os.path.join(BASE_DIR, 'inventory', 'templates'),
             os.path.join(BASE_DIR, 'pos', 'templates'),

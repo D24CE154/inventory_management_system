@@ -1,13 +1,78 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
 
-{% block title %}Admin Dashboard | Inventory Management System{% endblock %}
+{% block title %}Admin Dashboard | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
     <span class="current">Admin Dashboard</span>
 {% endblock %}
 
 {% block page_title %}Admin Dashboard{% endblock %}
+{% block page_description %}System overview and administrative controls{% endblock %}
+
+{% block sidebar_menu %}
+    <div class="menu-label">Admin</div>
+    <a href="{% url 'adminDashboard' %}" class="menu-item active">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </a>
+{#    <a href="{% url 'employee_management' %}" class="menu-item">#}
+        <i class="fas fa-users"></i>
+        <span>Employee Management</span>
+    </a>
+{#    <a href="{% url 'roles_permissions' %}" class="menu-item">#}
+        <i class="fas fa-user-shield"></i>
+        <span>Roles & Permissions</span>
+    </a>
+
+    <div class="menu-label">Inventory</div>
+{#    <a href="{% url 'product_categories' %}" class="menu-item">#}
+        <i class="fas fa-tags"></i>
+        <span>Categories</span>
+    </a>
+{#    <a href="{% url 'product_management' %}" class="menu-item">#}
+        <i class="fas fa-mobile-alt"></i>
+        <span>Products</span>
+    </a>
+
+    <div class="menu-label">Business</div>
+{#    <a href="{% url 'supplier_management' %}" class="menu-item">#}
+        <i class="fas fa-truck"></i>
+        <span>Suppliers</span>
+    </a>
+{#    <a href="{% url 'purchase_orders' %}" class="menu-item">#}
+        <i class="fas fa-shopping-cart"></i>
+        <span>Purchase Orders</span>
+    </a>
+{#    <a href="{% url 'sales_history' %}" class="menu-item">#}
+        <i class="fas fa-chart-line"></i>
+        <span>Sales History</span>
+    </a>
+
+    <div class="menu-label">Reports</div>
+{#    <a href="{% url 'sales_reports' %}" class="menu-item">#}
+        <i class="fas fa-chart-bar"></i>
+        <span>Sales Reports</span>
+    </a>
+{#    <a href="{% url 'inventory_reports' %}" class="menu-item">#}
+        <i class="fas fa-boxes"></i>
+        <span>Inventory Reports</span>
+    </a>
+{#    <a href="{% url 'financial_reports' %}" class="menu-item">#}
+        <i class="fas fa-rupee-sign"></i>
+        <span>Financial Reports</span>
+    </a>
+
+    <div class="menu-label">Settings</div>
+{#    <a href="{% url 'system_settings' %}" class="menu-item">#}
+        <i class="fas fa-cog"></i>
+        <span>System Settings</span>
+    </a>
+{#    <a href="{% url 'backup_restore' %}" class="menu-item">#}
+        <i class="fas fa-database"></i>
+        <span>Backup & Restore</span>
+    </a>
+{% endblock %}
 
 {% block content %}
     <!-- Key Metrics -->
@@ -16,7 +81,7 @@
             <div class="metric-header">
                 <h3 class="metric-title">Total Revenue</h3>
                 <div class="metric-icon blue">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="fas fa-rupee-sign"></i>
                 </div>
             </div>
             <h2 class="metric-value">₹{{ total_revenue|default:"0" }}</h2>
@@ -27,12 +92,12 @@
 
         <div class="metric-card">
             <div class="metric-header">
-                <h3 class="metric-title">Total Orders</h3>
+                <h3 class="metric-title">Total Sales</h3>
                 <div class="metric-icon green">
                     <i class="fas fa-shopping-cart"></i>
                 </div>
             </div>
-            <h2 class="metric-value">{{ total_orders|default:"0" }}</h2>
+            <h2 class="metric-value">{{ total_sales|default:"0" }}</h2>
             <div class="metric-change positive">
                 <i class="fas fa-arrow-up mr-1"></i> 8% from last month
             </div>
@@ -71,7 +136,7 @@
             <div class="chart-header">
                 <h3 class="chart-title">Revenue Overview</h3>
                 <div class="chart-actions">
-                    <select class="text-sm border rounded p-1">
+                    <select class="text-sm border rounded p-1 date-range-selector">
                         <option>Last 7 Days</option>
                         <option>Last 30 Days</option>
                         <option>Last 90 Days</option>
@@ -87,7 +152,7 @@
             <div class="chart-header">
                 <h3 class="chart-title">Sales by Category</h3>
                 <div class="chart-actions">
-                    <select class="text-sm border rounded p-1">
+                    <select class="text-sm border rounded p-1 date-range-selector">
                         <option>This Month</option>
                         <option>Last Month</option>
                         <option>This Year</option>
@@ -107,7 +172,7 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <h3 class="chart-title">Recent Orders</h3>
-                    <a href="{% url 'sales_history' %}" class="text-sm text-blue-500 hover:underline">View All</a>
+{#                    <a href="{% url 'sales_history' %}" class="text-sm text-blue-500 hover:underline">View All</a>#}
                 </div>
                 <div class="p-4">
                     <table class="data-table">
@@ -121,16 +186,16 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% if recent_orders %}
-                            {% for order in recent_orders %}
+                        {% if recent_sales %}
+                            {% for sale in recent_sales %}
                                 <tr>
-                                    <td>#{{ order.id }}</td>
-                                    <td>{{ order.customer.full_name }}</td>
-                                    <td>{{ order.date|date:"M d, Y" }}</td>
-                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>#{{ sale.sale_id }}</td>
+                                    <td>{{ sale.customer_id.customer_name }}</td>
+                                    <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                    <td>₹{{ sale.total_amount }}</td>
                                     <td>
-                                        <span class="status {% if order.status == 'Completed' %}success{% elif order.status == 'Pending' %}warning{% else %}info{% endif %}">
-                                            {{ order.status }}
+                                        <span class="status success">
+                                            Completed
                                         </span>
                                     </td>
                                 </tr>
@@ -155,7 +220,7 @@
                 {% if recent_activities %}
                     {% for activity in recent_activities %}
                         <li class="activity-item">
-                            <div class="activity-icon {% if activity.action_type == 'create' %}green{% elif activity.action_type == 'update' %}blue{% elif activity.action_type == 'delete' %}red{% else %}orange{% endif %}">
+                            <div class="activity-icon {% if activity.action_type == 'create' %}green{% elif activity.action_type == 'update' %}blue{% elif activity.action_type == 'delete' %}red{% else %}blue{% endif %}">
                                 {% if activity.action_type == 'create' %}
                                     <i class="fas fa-plus"></i>
                                 {% elif activity.action_type == 'update' %}
@@ -169,8 +234,8 @@
                                 {% endif %}
                             </div>
                             <div class="activity-content">
-                                <p class="activity-title">{{ activity.description }}</p>
-                                <p class="activity-time">{{ activity.timestamp|timesince }} ago</p>
+                                <p class="activity-title">{{ activity.action }}</p>
+                                <p class="activity-time">{{ activity.date|timesince }} ago</p>
                             </div>
                         </li>
                     {% endfor %}
@@ -184,48 +249,4 @@
             </ul>
         </div>
     </div>
-{% endblock %}
-
-{% block extra_js %}
-    <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                datasets: [{
-                    label: 'Revenue',
-                    data: [65000, 59000, 80000, 81000, 56000, 95000, 140000],
-                    borderColor: '#1a73e8',
-                    backgroundColor: 'rgba(26, 115, 232, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-
-        // Categories Chart
-        const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
-        new Chart(categoriesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Electronics', 'Clothing', 'Food', 'Home & Garden', 'Others'],
-                datasets: [{
-                    data: [35, 25, 20, 15, 5],
-                    backgroundColor: [
-                        '#1a73e8', '#34a853', '#fbbc05', '#ea4335', '#9334e6'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    </script>
 {% endblock %}

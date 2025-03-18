@@ -1,25 +1,40 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<!-- Head section remains the same -->
 <head>
-    <!-- ... existing head content ... -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IG Mobile - Inventory Management{% endblock %}</title>
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-100">
+
+<body>
 <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="dashboard-sidebar">
-        <!-- ... sidebar header ... -->
+        <div class="sidebar-header">
+            <div class="sidebar-brand">IG Mobile</div>
+            <button class="text-gray-400 hover:text-white lg:hidden" id="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-        <!-- Updated sidebar user photo section with more robust fallback -->
         <div class="sidebar-user">
             {% if request.user.employee.photo %}
-                <img src="{{ request.user.employee.photo.url }}"
+                <profile_pics src="{{ request.user.employee.photo.url }}"
                      alt="User Profile"
-                     onerror="this.src='{% static 'img/default-avatar.png' %}'"
+                     onerror="this.src='{% static 'profile_pics/default-avatar.png' %}'"
                      class="user-avatar">
             {% else %}
-                <img src="{% static 'img/default-avatar.png' %}"
+                <profile_pics src="{% static 'profile_pics/default-avatar.png' %}"
                      alt="Default Profile"
                      class="user-avatar">
             {% endif %}
@@ -27,16 +42,30 @@
             <div class="user-role">{{ request.user.employee.role }}</div>
         </div>
 
-        <!-- ... sidebar menu items ... -->
+        <nav class="sidebar-menu">
+            {% block sidebar_menu %}
+                <!-- Will be overridden by role-specific dashboard templates -->
+            {% endblock %}
+        </nav>
     </aside>
 
     <!-- Main Content Area -->
     <div class="flex flex-col flex-1">
         <!-- Header -->
         <header class="dashboard-header">
-            <!-- ... header content ... -->
+            <div class="flex items-center">
+                <button class="mobile-menu-btn mr-4" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumb">
+                    <a href="{% url 'adminDashboard' %}">IG Mobile</a>
+                    <span class="separator">/</span>
+                    {% block breadcrumb %}
+                        <span class="current">Dashboard</span>
+                    {% endblock %}
+                </div>
+            </div>
 
-            <!-- Updated header profile photo section -->
             <div class="header-actions">
                 <div class="notification-bell">
                     <i class="fas fa-bell"></i>
@@ -47,12 +76,12 @@
 
                 <div class="user-profile" id="profile-menu">
                     {% if request.user.employee.photo %}
-                        <img src="{{ request.user.employee.photo.url }}"
+                        <profile_pics src="{{ request.user.employee.photo.url }}"
                              alt="Profile"
-                             onerror="this.src='{% static 'img/default-avatar.png' %}'"
+                             onerror="this.src='{% static 'profile_pics/default-avatar.png' %}'"
                              class="profile-avatar">
                     {% else %}
-                        <img src="{% static 'img/default-avatar.png' %}"
+                        <profile_pics src="{% static 'profile_pics/default-avatar.png' %}"
                              alt="Default Profile"
                              class="profile-avatar">
                     {% endif %}
@@ -62,15 +91,58 @@
                     </div>
                     <i class="fas fa-chevron-down ml-2"></i>
 
-                    <!-- ... dropdown menu ... -->
+                    <div class="profile-dropdown" id="profile-dropdown">
+{#                        <a href="{% url 'profile' %}" class="dropdown-item">#}
+                            <i class="fas fa-user"></i>
+                            <span>My Profile</span>
+                        </a>
+{#                        <a href="{% url 'settings' %}" class="dropdown-item">#}
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'logout' %}" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- ... rest of the template remains the same ... -->
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                <p class="page-description">{% block page_description %}{% endblock %}</p>
+                <p class="text-sm text-gray-500 mt-1" id="current-date"></p>
+            </div>
+
+            {% block content %}
+                <!-- Page content goes here -->
+            {% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        &copy; 2025 IG Mobile. All rights reserved.
+                    </div>
+                    <div class="mt-2 md:mt-0">
+                        Inventory Management System v1.0
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 </div>
 
-<!-- ... mobile menu toggle and scripts ... -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>
