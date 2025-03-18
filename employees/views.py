@@ -277,7 +277,7 @@ def logout_view(request):
     request.session.flush()
     return redirect('login')
 
-@login_required()
+@login_required(login_url=settings.LOGIN_URL)
 def redirect_based_on_role(request):
     try:
         employee = Employee.objects.get(user=request.user)
@@ -306,5 +306,6 @@ def error_500_view(request,exception=500):
     }
     return render(request, 'errors/500.html', context, status=500)
 
+@login_required(login_url=settings.LOGIN_URL)
 def adminDashboard(request):
     return render(request, 'admin_dashboard.html')
