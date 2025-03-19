@@ -7,7 +7,7 @@ from .views import (add_employee,employee_management, login_view, logout_view, r
 urlpatterns = [
    # path("signup/", add_employee, name="signup"),
     path('employee-management/', employee_management, name='employee_management'),
-    path('employee-management/add/', add_employee, name='add_employee'),
+    path('employee-management/add-employee/', add_employee, name='add_employee'),
     path('employee-management/toggle/<int:employee_id>/', toggle_employee_status, name='toggle_employee_status'),
     path("verify-otp/", verify_otp, name="verify_otp"),
     path("login/", login_view, name="login"),

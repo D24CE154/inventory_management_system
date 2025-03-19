@@ -139,50 +139,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        function togglePassword(id) {
-            const passwordField = document.getElementById(id);
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-
-            const icon = event.currentTarget.querySelector('i');
-            if (type === 'text') {
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
-        // OTP timer functionality
-        document.addEventListener("DOMContentLoaded", function() {
-            const resendBtn = document.getElementById("resend-otp");
-            if (resendBtn) {
-                // Check if there are maximum attempts reached
-                const maxAttemptsReached = resendBtn.textContent.trim() === "Maximum attempts reached";
-
-                if (maxAttemptsReached) {
-                    resendBtn.disabled = true;
-                    return;
-                }
-
-                // Set up timer
-                let timer = 30;
-                resendBtn.disabled = true;
-                updateButton();
-
-                function updateButton() {
-                    if (timer > 0) {
-                        resendBtn.textContent = `Resend OTP (${timer}s)`;
-                        timer--;
-                        setTimeout(updateButton, 1000);
-                    } else {
-                        resendBtn.textContent = "Resend OTP";
-                        resendBtn.disabled = false;
-                    }
-                }
-            }
-        });
-    </script>
+    <script>src = "{% static 'js/add_employee.js' %}"</script>
 {% endblock %}
