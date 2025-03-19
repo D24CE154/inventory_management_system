@@ -1,0 +1,188 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
+{% endblock %}
+{% block title %}Add Employee | IG Mobile{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'employee_management' %}">Employee Management</a>
+    <span class="separator">/</span>
+    <span class="current">Add Employee</span>
+{% endblock %}
+
+{% block page_title %}Add New Employee{% endblock %}
+{% block page_description %}Create a new employee account{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        {% if otp_sent %}
+            <div class="otp-container">
+                <h2>Email Verification</h2>
+                <p class="otp-info">We've sent a verification code to <strong>{{ request.session.signup_data.email }}</strong></p>
+
+                <form method="POST" action="{% url 'verify_otp' %}" class="centered-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="otp-input">Enter OTP</label>
+                        <input type="text" id="otp-input" name="otp" placeholder="6-digit OTP" maxlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Verify OTP</button>
+                </form>
+
+                {% if otp_expired %}
+                    <p class="error-message">The OTP has expired. Please request a new one.</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'resend_otp' %}" class="resend-form">
+                    {% csrf_token %}
+                    <button type="submit" id="resend-otp" class="btn btn-outline" {% if otp_resend_attempts >= 3 %}disabled{% endif %}>
+                        {% if otp_resend_attempts >= 3 %}
+                            Maximum attempts reached
+                        {% else %}
+                            Resend OTP (30s)
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="form-group">
+                            <label for="id_full_name" class="form-label">Full Name</label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <span class="form-error">{{ form.full_name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_email" class="form-label">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <span class="form-error">{{ form.email.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_role" class="form-label">Role</label>
+                            {{ form.role }}
+                            {% if form.role.errors %}
+                                <span class="form-error">{{ form.role.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_password" class="form-label">Password</label>
+                            <div class="relative">
+                                {{ form.password }}
+                                <button type="button" class="password-toggle" onclick="togglePassword('id_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                <span class="form-error">{{ form.password.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_confirm_password" class="form-label">Confirm Password</label>
+                            <div class="relative">
+                                {{ form.confirm_password }}
+                                <button type="button" class="password-toggle" onclick="togglePassword('id_confirm_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.confirm_password.errors %}
+                                <span class="form-error">{{ form.confirm_password.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group">
+                            <label for="id_phone" class="form-label">Phone</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <span class="form-error">{{ form.phone.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_address" class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <span class="form-error">{{ form.address.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_photo" class="form-label">Profile Photo</label>
+                            {{ form.photo }}
+                            {% if form.photo.errors %}
+                                <span class="form-error">{{ form.photo.errors.0 }}</span>
+                            {% endif %}
+                            <div class="form-help">Upload a profile picture (Max 2MB)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions mt-6">
+                    <button type="submit" class="btn btn-primary">Add Employee</button>
+                    <a href="{% url 'employee_management' %}" class="btn btn-outline ml-2">Cancel</a>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function togglePassword(id) {
+            const passwordField = document.getElementById(id);
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+
+            const icon = event.currentTarget.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // OTP timer functionality
+        document.addEventListener("DOMContentLoaded", function() {
+            const resendBtn = document.getElementById("resend-otp");
+            if (resendBtn) {
+                // Check if there are maximum attempts reached
+                const maxAttemptsReached = resendBtn.textContent.trim() === "Maximum attempts reached";
+
+                if (maxAttemptsReached) {
+                    resendBtn.disabled = true;
+                    return;
+                }
+
+                // Set up timer
+                let timer = 30;
+                resendBtn.disabled = true;
+                updateButton();
+
+                function updateButton() {
+                    if (timer > 0) {
+                        resendBtn.textContent = `Resend OTP (${timer}s)`;
+                        timer--;
+                        setTimeout(updateButton, 1000);
+                    } else {
+                        resendBtn.textContent = "Resend OTP";
+                        resendBtn.disabled = false;
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,6 +1,7 @@
 import datetime
 import time
 import random
+
 from django.contrib.auth import login,logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -17,6 +18,7 @@ from django.core.files import File
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 
 OTP_EXPIRY_SECONDS = 300
 OTP_RESEND_LIMIT = 3
@@ -38,6 +40,10 @@ def send_otp_email(email, otp):
         return False
 
 def verify_otp(request):
+    if not is_active_admin(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
     if request.method == "POST" and "otp" in request.POST:
         entered_otp = request.POST.get("otp")
 
@@ -50,11 +56,11 @@ def verify_otp(request):
 
         if time.time() - otp_timestamp > OTP_EXPIRY_SECONDS:
             messages.error(request, "OTP has expired. Request a new one.")
-            return render(request, "signup.html", {"otp_sent": True, "otp_expired": True})
+            return render(request, "add_employee.html", {"otp_sent": True, "otp_expired": True})
 
         if entered_otp != stored_otp:
             messages.error(request, "Invalid OTP. Please try again.")
-            return render(request, "signup.html", {"otp_sent": True})
+            return render(request, "add_employee.html", {"otp_sent": True})
 
         signup_data = request.session.get("signup_data")
 
@@ -71,7 +77,7 @@ def verify_otp(request):
                 user=user,
                 full_name=signup_data["full_name"],
                 phone=signup_data["phone"],
-                role="Sales Executive",
+                role=signup_data['role'],
                 address=signup_data["address"],
                 is_active=True
             )
@@ -82,17 +88,25 @@ def verify_otp(request):
                     employee.photo.save(photo_path, File(photo_file))
 
             employee.save()
-            request.session.flush()
-            messages.success(request, "Signup successful! Please log in.")
-            return redirect("login")
+            for key in ['signup_data', 'otp', 'otp_timestamp', 'otp_resend_attempts', 'photo_path']:
+                if key in request.session:
+                    del request.session[key]
+
+            messages.success(request, f"Employee {signup_data['full_name']} added successfully!")
+            return redirect("employee_management")
 
         except Exception as e:
             messages.error(request, f"Error during signup: {e}")
-            return redirect("signup")
+            return redirect("add_employee")
 
-    return redirect("signup")
+    return redirect("add_employee")
 
-def signup_view(request):
+@login_required(login_url='login')
+def add_employee(request):
+    if not is_active_admin(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
     if request.method == "POST":
         form = SignupForm(request.POST, request.FILES)
         if form.is_valid():
@@ -105,6 +119,7 @@ def signup_view(request):
                 "phone": form.cleaned_data["phone"],
                 "address": form.cleaned_data["address"],
                 "password": form.cleaned_data["password"],
+                "role": form.cleaned_data["role"],
             }
 
             if "photo" in request.FILES:
@@ -118,15 +133,45 @@ def signup_view(request):
 
             if send_otp_email(email, otp):
                 messages.success(request, "OTP sent to your email successfully!")
-                return render(request, "signup.html", {"otp_sent": True})
+                return render(request, "add_employee.html", {"otp_sent": True})
 
             messages.error(request, "Failed to send OTP. Please try again.")
         else:
             messages.error(request, "Form submission failed. Please correct the errors below.")
 
-        return render(request, "signup.html", {"form": form})
+        return render(request, "add_employee.html", {"form": form})
 
-    return render(request, "signup.html", {"form": SignupForm()})
+    return render(request, "add_employee.html", {"form": SignupForm()})
+
+@login_required(login_url='login')
+def employee_management(request):
+    # Check if user is admin
+    if not is_active_admin(request.user):
+        messages.error("You are not authorized to access this page")
+        return redirect("error_403_view")
+
+    search_query = request.GET.get('search', '')
+    if search_query:
+        employees = Employee.objects.filter(
+            Q(full_name__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(role__icontains=search_query)
+        ).order_by('-is_active', 'full_name')
+    else:
+        employees = Employee.objects.all().order_by('-is_active', 'full_name')
+
+    role_counts = {
+        'Admin':Employee.objects.filter(role='Admin').count(),
+        'Inventory Manager':Employee.objects.filter(role='Inventory Manager').count(),
+        'Sales Executive':Employee.objects.filter(role='Sales Executive').count(),
+    }
+    context = {
+        'employees': employees,
+        'role_counts': role_counts,
+        'search_query': search_query,
+    }
+    return render(request, "employee_management.html", context)
 
 def resend_otp(request):
     if not request.session.get("signup_data"):
@@ -136,7 +181,7 @@ def resend_otp(request):
     resend_attempts = request.session.get("otp_resend_attempts", 0)
     if resend_attempts >= OTP_RESEND_LIMIT:
         messages.error(request, "Maximum OTP resend attempts reached.")
-        return render(request, "signup.html", {"otp_sent": True})
+        return render(request, "add_employee.html", {"otp_sent": True})
 
     email = request.session["signup_data"]["email"]
     current_time = time.time()
@@ -157,7 +202,7 @@ def resend_otp(request):
     else:
         messages.error(request, "Failed to resend OTP. Try again.")
 
-    return render(request, 'signup.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
+    return render(request, 'add_employee.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
 
 def login_view(request):
     login_form = LoginForm(request.POST or None)
@@ -175,20 +220,26 @@ def login_view(request):
         if user and user.check_password(password):
             if user.is_active:
                 try:
-
                     employee = Employee.objects.get(user=user)
+
+                    # Check if employee is active
+                    if not employee.is_active:
+                        messages.error(request, "Your employee account has been deactivated. Please contact an administrator.")
+                        return render(request, "login.html", {"login_form": login_form})
+
                     user.last_login = now()
                     user.save(update_fields=["last_login"])
 
                     request.session["email"] = user.email
                     request.session["full_name"] = employee.full_name
                     request.session["photo"] = employee.photo.url if employee.photo else None
+
                 except Employee.DoesNotExist:
                     messages.error(request, "Employee does not exist.")
-                    return render(request, "signup.html", {"signup_form": SignupForm()})
+                    return render(request, "login.html", {"login_form": login_form})
 
                 login(request, user)
-                return redirect_based_on_role(employee)
+                return redirect_based_on_role(request)
             else:
                 messages.error(request, "Account not activated. Please verify your email.")
         else:
@@ -276,11 +327,18 @@ def logout_view(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect("/login/?logged_out=True")
 
-
+@login_required(login_url='login')
 @login_required(login_url='login')
 def redirect_based_on_role(request):
     try:
         employee = Employee.objects.get(user=request.user)
+
+        # Ensure both user and employee are active
+        if not employee.is_active or not request.user.is_active:
+            messages.error(request, "Your account is inactive. Please contact an administrator.")
+            logout(request)
+            return redirect("login")
+
         if employee.role == "Admin":
             return redirect("adminDashboard")
         elif employee.role == "Inventory Manager":
@@ -308,4 +366,47 @@ def error_500_view(request,exception=500):
 
 @login_required(login_url=settings.LOGIN_URL)
 def adminDashboard(request):
+    if not is_active_admin(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
     return render(request, 'admin_dashboard.html')
+
+def is_active_admin(user):
+    if user.is_authenticated and user.employee.role == 'Admin' and user.employee.is_active:
+        return True
+    return False
+
+@login_required(login_url='login')
+def toggle_employee_status(request,employee_id):
+    if not is_active_admin(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
+    if request.method != "POST":
+        return redirect("employee_management")
+
+    try:
+        employee = Employee.obects.filter(id = employee_id)
+        if employee.user == request.user:
+            messages.error(request, "You cannot deactivate your own account.")
+            return redirect("employee_management")
+
+        action = request.POST.get("action")
+        if action == "activate":
+            employee.is_active = True
+            employee.user.is_active = True
+            messages.success(request, f"{employee.full_name} has been activated.")
+
+        elif action == "deactivate":
+            employee.is_active = False
+            employee.user.is_active = False
+            messages.success(request, f"{employee.full_name} has been deactivated.")
+
+        employee.save()
+        employee.user.save()
+
+    except Employee.DoesNotExist:
+        messages.error(request, "Employee not found.")
+    return redirect("employee_management")
+
+
