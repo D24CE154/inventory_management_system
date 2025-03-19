@@ -53,7 +53,6 @@
         <p>Don't have an account? <a href="{% url 'signup' %}" class="signup-link">Sign Up</a></p>
     </div>
 
-    <!-- Popup Error Messages -->
     {% if messages %}
         <div id="message-container" class="popup-message">
             {% for message in messages %}
@@ -79,6 +78,21 @@
         }
     });
 </script>
-
+<script>
+    window.addEventListener("pageshow", function (event) {
+        if (event.persisted) {
+            window.location.reload(true);
+        }
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("logged_out") === "True") {
+            history.replaceState(null, "", "/login/");
+            window.location.reload();
+        }
+    });
+</script>
 </body>
 </html>

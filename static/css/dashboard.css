@@ -79,7 +79,7 @@ body {
 
 .user-name {
     font-weight: 600;
-    color: #f3f4f6;
+    color: black;
 }
 
 .user-role {
@@ -729,4 +729,90 @@ body {
     .main-content {
         padding: 1rem;
     }
+}
+/* Complete sidebar collapse styles */
+.dashboard-layout {
+    position: relative;
+    transition: all 0.3s;
+}
+
+.sidebar-collapsed .dashboard-sidebar {
+    width: 70px;
+}
+
+.sidebar-collapsed .sidebar-brand {
+    display: none;
+}
+
+.sidebar-collapsed .menu-item span {
+    display: none;
+}
+
+.sidebar-collapsed .menu-label {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-toggle-btn i {
+    transform: rotate(180deg);
+}
+
+/* Update this section */
+.sidebar-collapsed .flex.flex-col.flex-1 {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+    transition: all 0.3s;
+}
+
+.sidebar-collapsed .main-content {
+    margin-left: 0;
+}
+
+@media (max-width: 1024px) {
+    .sidebar-collapsed .flex.flex-col.flex-1 {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+/* Add these rules to fix the container alignment */
+.flex.flex-col.flex-1.main-container {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    transition: all 0.3s;
+}
+
+.sidebar-collapsed .flex.flex-col.flex-1.main-container {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 1024px) {
+    .flex.flex-col.flex-1.main-container {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sidebar-shown .flex.flex-col.flex-1.main-container {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+    }
+
+    .sidebar-collapsed .flex.flex-col.flex-1.main-container {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+/* Fix content spacing - remove margin from main-content */
+.main-content {
+    flex: 1;
+    margin-left: 0; /* Remove this margin, container handles spacing */
+    padding: 2rem;
+    background-color: var(--bg-color);
+    min-height: calc(100vh - 70px);
+    transition: all 0.3s;
+}
+
+/* Ensure consistent padding at different sidebar states */
+.sidebar-collapsed .main-content {
+    padding: 2rem;
 }

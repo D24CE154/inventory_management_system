@@ -33,22 +33,6 @@
                 </button>
             </div>
         </div>
-
-        <div class="sidebar-user">
-            {% if request.user.employee.photo %}
-                <img src="{{ request.user.employee.photo.url }}"
-                     alt="User Profile"
-                     onerror="this.src='{% static 'profile_pics/default-avatar.png' %}'"
-                     class="user-avatar">
-            {% else %}
-                <img src="{% static 'profile_pics/default-avatar.png' %}"
-                     alt="Default Profile"
-                     class="user-avatar">
-            {% endif %}
-            <div class="user-name">{{ request.user.employee.full_name }}</div>
-            <div class="user-role">{{ request.user.employee.role }}</div>
-        </div>
-
         <nav class="sidebar-menu">
             {% block sidebar_menu %}
                 <!-- Will be overridden by role-specific dashboard templates -->
@@ -57,7 +41,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex flex-col flex-1">
+    <div class="flex flex-col flex-1 main-container">
         <!-- Header -->
         <header class="dashboard-header">
             <div class="flex items-center">
@@ -160,5 +144,6 @@
 
 <!-- Page-specific JavaScript -->
 {% block extra_js %}{% endblock %}
+
 </body>
 </html>

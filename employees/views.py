@@ -270,14 +270,14 @@ def reset_password_view(request, uidb64, token):
 
     return render(request, "reset-password.html", {"form": form})
 
-
-@login_required(login_url="login")
 def logout_view(request):
     logout(request)
     request.session.flush()
-    return redirect('login')
+    messages.success(request, "You have been logged out successfully.")
+    return redirect("/login/?logged_out=True")
 
-@login_required(login_url=settings.LOGIN_URL)
+
+@login_required(login_url='login')
 def redirect_based_on_role(request):
     try:
         employee = Employee.objects.get(user=request.user)
