@@ -11,7 +11,9 @@
 
 {% block page_title %}Employee Management{% endblock %}
 {% block page_description %}Manage all employee accounts{% endblock %}
-
+{% block sidebar_menu %}
+    {% include 'menus/admin_menu.html' with active_page='employee_management' %}
+{% endblock %}
 {% block content %}
     <div class="mb-4 flex justify-between items-center">
         <div>
@@ -53,11 +55,15 @@
                         <td class="p-4">
                             <div class="flex items-center">
                                 {% if employee.photo %}
-                                    <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}" class="h-8 w-8 rounded-full mr-3">
+                                    <!-- Direct path reference without static tag -->
+                                    <img src="/profile_pics/{{ employee.photo.name }}"
+                                         alt="{{ employee.full_name }}"
+                                         class="h-8 w-8 rounded-full mr-3"
+                                         onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
                                 {% else %}
-                                    <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center mr-3">
-                                        <i class="fas fa-user text-gray-500"></i>
-                                    </div>
+                                    <img src="{% static 'profile_pics/default-avatar.png' %}"
+                                         alt="{{ employee.full_name }}"
+                                         class="h-8 w-8 rounded-full mr-3">
                                 {% endif %}
                                 <span>{{ employee.full_name }}</span>
                             </div>

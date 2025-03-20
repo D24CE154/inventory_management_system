@@ -278,16 +278,4 @@
             });
         });
     </script>
-    <script>
-        window.addEventListener("beforeunload", function () {
-            sessionStorage.setItem("needsRefresh", "true");
-        });
-
-        window.addEventListener("pageshow", function () {
-            if (sessionStorage.getItem("needsRefresh")) {
-                sessionStorage.removeItem("needsRefresh");
-                location.reload();
-            }
-        });
-    </script>
 {% endblock %}

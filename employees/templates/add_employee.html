@@ -14,6 +14,10 @@
 {% block page_title %}Add New Employee{% endblock %}
 {% block page_description %}Create a new employee account{% endblock %}
 
+{% block sidebar_menu %}
+    {% include 'menus/admin_menu.html' with active_page='employee_management' %}
+{% endblock %}
+
 {% block content %}
     <div class="form-card">
         {% if otp_sent %}
@@ -139,5 +143,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>src = "{% static 'js/add_employee.js' %}"</script>
+    <script src="{% static 'js/add_employee.js' %}"></script>
 {% endblock %}

@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{% static 'js/navigation-handler.js' %}"></script>
 
 </head>
 <body>
@@ -63,7 +64,6 @@
 
 <!-- Include shared password toggle script -->
 <script src="{% static 'js/showPassword.js' %}"></script>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const popup = document.getElementById("message-container");
@@ -74,22 +74,6 @@
                     popup.style.display = "none";
                 }, 500);
             }, 5000);
-        }
-    });
-</script>
-<script>
-    window.addEventListener("pageshow", function (event) {
-        if (event.persisted) {
-            window.location.reload(true);
-        }
-    });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("logged_out") === "True") {
-            history.replaceState(null, "", "/login/");
-            window.location.reload();
         }
     });
 </script>

@@ -63,7 +63,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 LOGIN_URL = '/employees/login/'
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
 LOGOUT_REDIRECT_URL = '/employees/login/'
