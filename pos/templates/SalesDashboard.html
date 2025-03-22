@@ -1,38 +1,157 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
 
-{% block title %}Sales Dashboard | Inventory Management System{% endblock %}
+{% block title %}Sales Dashboard | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
     <span class="current">Sales Dashboard</span>
 {% endblock %}
 
 {% block page_title %}Sales Dashboard{% endblock %}
+{% block page_description %}Sales overview and performance metrics{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with active_page='salesExecutiveDashboard' %}
+{% endblock %}
 
 {% block content %}
-<!-- Key Metrics -->
-<div class="metrics-grid">
-    <div class="metric-card">
-        <div class="metric-header">
-            <h3 class="metric-title">Today's Sales</h3>
-            <div class="metric-icon blue">
-                <i class="fas fa-shopping-cart"></i>
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Today's Sales</h3>
+                <div class="metric-icon blue">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">{{ today_sales_count|default:"0" }}</h2>
+            <div class="metric-change {% if today_sales_change >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if today_sales_change >= 0 %}up{% else %}down{% endif %} mr-1"></i>
+                {{ today_sales_change|default:"0" }}% from yesterday
             </div>
         </div>
-        <h2 class="metric-value">₹{{ today_sales|default:"0" }}</h2>
-        <div class="metric-change {% if today_vs_yesterday > 0 %}positive{% else %}negative{% endif %}">
-            <i class="fas fa-{% if today_vs_yesterday > 0 %}arrow-up{% else %}arrow-down{% endif %} mr-1"></i>
-            {{ today_vs_yesterday|abs }}% from yesterday
+
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Today's Revenue</h3>
+                <div class="metric-icon green">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">₹{{ today_revenue|floatformat:2|default:"0" }}</h2>
+            <div class="metric-change {% if today_revenue_change >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if today_revenue_change >= 0 %}up{% else %}down{% endif %} mr-1"></i>
+                {{ today_revenue_change|default:"0" }}% from yesterday
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Monthly Target</h3>
+                <div class="metric-icon orange">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">{{ monthly_target_percentage|default:"0" }}%</h2>
+            <div class="metric-subtitle">₹{{ monthly_sales|floatformat:2|default:"0" }} / ₹{{ monthly_target|floatformat:2|default:"0" }}</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-header">
+                <h3 class="metric-title">Avg. Order Value</h3>
+                <div class="metric-icon purple">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <h2 class="metric-value">₹{{ avg_order_value|floatformat:2|default:"0" }}</h2>
+            <div class="metric-change {% if avg_change >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-arrow-{% if avg_change >= 0 %}up{% else %}down{% endif %} mr-1"></i>
+                {{ avg_change|default:"0" }}% from last month
+            </div>
         </div>
     </div>
 
-    <div class="metric-card">
-        <div class="metric-header">
-            <h3 class="metric-title">Sales Target</h3>
-            <div class="metric-icon green">
-                <i class="fas fa-bullseye"></i>
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Sales Performance</h3>
+                <div class="chart-actions">
+                    <select class="text-sm border rounded p-1 sales-period-selector">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="salesPerformanceChart"></canvas>
+                <script id="sales-data" type="application/json">{{ sales_data|safe }}</script>
             </div>
         </div>
-        <h2 class="metric-value">{{ sales_percentage|default:"0" }}%</h2>
-        <div class="progress h-2 bg-gray-200 rounded-full mt-2">
-            <div class="h-full bg-green-500 rounde
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Top Products</h3>
+                <div class="chart-actions">
+                    <select class="text-sm border rounded p-1 products-period-selector">
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="topProductsChart"></canvas>
+                <script id="top-products-data" type="application/json">{{ top_products_today|safe }}</script>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Recent Sales</h3>
+                </div>
+                <div class="p-4">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Time</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if recent_sales %}
+                            {% for sale in recent_sales %}
+                                <tr>
+                                    <td>#{{ sale.sale_id }}</td>
+                                    <td>{{ sale.customer_id.customer_name }}</td>
+                                    <td>{{ sale.sale_date|time:"g:i A" }}</td>
+                                    <td>₹{{ sale.total_amount }}</td>
+                                    <td>
+                                        <span class="status success">Completed</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">No recent sales found</td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/sales_dashboard.js' %}"></script>
+{% endblock %}

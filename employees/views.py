@@ -12,13 +12,18 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Employee
-from .forms import SignupForm, LoginForm, ForgotPassword,ResetPasswordForm
+from .forms import SignupForm, LoginForm, ForgotPassword,ResetPasswordForm, EmployeeEditForm
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Q
+from django.db.models import Sum, Count
+from employees.models import Employee
+from inventory.models import Product,ProductCategory
+from pos.models import Sale, SaleItem
+from django.db.models.functions import TruncDate
 
 OTP_EXPIRY_SECONDS = 300
 OTP_RESEND_LIMIT = 3
@@ -124,7 +129,7 @@ def add_employee(request):
 
             if "photo" in request.FILES:
                 photo = request.FILES["photo"]
-                file_name = default_storage.save(f'profile_pics/{form.cleaned_data["phone"]}_pfp.jpg', photo)
+                file_name = default_storage.save(f'{form.cleaned_data["phone"]}_pfp.jpg', photo)
                 request.session["photo_path"] = file_name
 
             request.session["otp"] = otp
@@ -147,19 +152,22 @@ def add_employee(request):
 def employee_management(request):
     # Check if user is admin
     if not is_active_admin(request.user):
-        messages.error("You are not authorized to access this page")
+        messages.error(request,"You are not authorized to access this page")
         return redirect("error_403_view")
 
-    search_query = request.GET.get('search', '')
+    search_query = request.GET.get('search', '').strip()
+
     if search_query:
         employees = Employee.objects.filter(
+            Q(employee_id__icontains=search_query) |
             Q(full_name__icontains=search_query) |
             Q(user__email__icontains=search_query) |
             Q(phone__icontains=search_query) |
             Q(role__icontains=search_query)
-        ).order_by('-is_active', 'full_name')
+        ).order_by('employee_id',)
     else:
-        employees = Employee.objects.all().order_by('-is_active', 'full_name')
+        employees = Employee.objects.all().order_by('employee_id')
+
 
     role_counts = {
         'Admin':Employee.objects.filter(role='Admin').count(),
@@ -170,7 +178,9 @@ def employee_management(request):
         'employees': employees,
         'role_counts': role_counts,
         'search_query': search_query,
+        'employee' : Employee.objects.get(employee_id=request.user.employee.employee_id)
     }
+
     return render(request, "employee_management.html", context)
 
 def resend_otp(request):
@@ -259,14 +269,11 @@ def forgot_password_view(request):
 
                 # Check if a reset request was made within the last hour
                 if employee.last_password_reset and (now() - employee.last_password_reset) < timedelta(hours=1):
-                    print("\n✅ DEBUG: Resending the same password reset link.")  # 🔥 Debugging
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                     token = default_token_generator.make_token(user)
                     reset_link = request.build_absolute_uri(reverse("reset_password", args=[uid, token]))
 
                 else:
-                    print("\n✅ DEBUG: Generating a new password reset link.")  # 🔥 Debugging
-                    # Generate new reset link
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                     token = default_token_generator.make_token(user)
                     reset_link = request.build_absolute_uri(reverse("reset_password", args=[uid, token]))
@@ -328,7 +335,6 @@ def logout_view(request):
     return redirect("/login/?logged_out=True")
 
 @login_required(login_url='login')
-@login_required(login_url='login')
 def redirect_based_on_role(request):
     try:
         employee = Employee.objects.get(user=request.user)
@@ -364,49 +370,197 @@ def error_500_view(request,exception=500):
     }
     return render(request, 'errors/500.html', context, status=500)
 
-@login_required(login_url=settings.LOGIN_URL)
+@login_required(login_url='login')
 def adminDashboard(request):
     if not is_active_admin(request.user):
         messages.error(request, "You don't have permission to access this page.")
         return redirect("error_403_view")
-    return render(request, 'admin_dashboard.html')
+
+    today = now().date()
+    last_7_days = today - timedelta(days=7)
+    last_30_days = today - timedelta(days=30)
+    last_90_days = today - timedelta(days=90)
+
+    first_day_current_month = today.replace(day=1)
+    last_day_previous_month = first_day_current_month - timedelta(days=1)
+    first_day_previous_month = last_day_previous_month.replace(day=1)
+
+    current_month_revenue = Sale.objects.filter(
+        sale_date__date__range=[first_day_current_month, today]
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    previous_month_revenue = Sale.objects.filter(
+        sale_date__date__range=[first_day_previous_month, last_day_previous_month]
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    current_month_sales = Sale.objects.filter(
+        sale_date__date__range=[first_day_current_month, today]
+    ).count()
+
+    previous_month_sales = Sale.objects.filter(
+        sale_date__date__range=[first_day_previous_month, last_day_previous_month]
+    ).count()
+
+    revenue_change = calculate_percentage_change(current_month_revenue, previous_month_revenue)
+    sales_change = calculate_percentage_change(current_month_sales, previous_month_sales)
+
+    revenue_change = abs(revenue_change)
+    sales_change = abs(sales_change)
+
+
+    revenue_data = {
+        'last_7_days': get_revenue_data(last_7_days, today),
+        'last_30_days': get_revenue_data(last_30_days, today),
+        'last_90_days': get_revenue_data(last_90_days, today),
+    }
+
+    first_day_of_month = today.replace(day=1)
+    first_day_of_last_month = (first_day_of_month - timedelta(days=1)).replace(day=1)
+    last_day_of_last_month = first_day_of_month - timedelta(days=1)
+    first_day_of_year = today.replace(month=1, day=1)
+
+    category_data = {
+        'this_month': get_category_sales_data(first_day_of_month, today),
+        'last_month': get_category_sales_data(first_day_of_last_month, last_day_of_last_month),
+        'this_year': get_category_sales_data(first_day_of_year, today),
+    }
+
+    total_revenue = Sale.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_sales = Sale.objects.count()
+    product_count = Product.objects.count()
+    employee_count = Employee.objects.count()
+
+    recent_sales = Sale.objects.select_related('customer_id').order_by('-sale_date')[:5]
+    low_stock_products = Product.objects.filter(stock__lte=10).order_by('stock')[:5]
+
+    context = {
+        'total_revenue': total_revenue,
+        'total_sales': total_sales,
+        'product_count': product_count,
+        'employee_count': employee_count,
+        'revenue_change': revenue_change,
+        'sales_change': sales_change,
+        'recent_sales': recent_sales,
+        'low_stock_products': low_stock_products,
+        'revenue_data': revenue_data,
+        'category_data': category_data,
+        'employee' : Employee.objects.get(employee_id=request.user.employee.employee_id)
+    }
+
+    return render(request, 'admin_dashboard.html', context)
+
+def calculate_percentage_change(current, previous):
+    if previous == 0:
+        return 100 if current > 0 else 0
+    return int(((current - previous) / previous) * 100)
+
+def get_revenue_data(start_date, end_date):
+    sales_by_date = Sale.objects.filter(
+        sale_date__date__range=[start_date, end_date]
+    ).annotate(
+        date=TruncDate('sale_date')
+    ).values('date').annotate(
+        total=Sum('total_amount')
+    ).order_by('date')
+
+    date_range = [(start_date + timedelta(days=i)) for i in range((end_date - start_date).days + 1)]
+    sales_dict = {item['date']: item['total'] for item in sales_by_date}
+    labels = [date.strftime('%d %b') for date in date_range]
+    data = [float(sales_dict.get(date, 0)) for date in date_range]
+
+    return {'labels': labels, 'data': data}
+
+def get_category_sales_data(start_date, end_date):
+
+    categories = ProductCategory.objects.all()
+
+    sales_by_category = []
+    for category in categories:
+        total = SaleItem.objects.filter(
+            sale_id__sale_date__date__range=[start_date, end_date],
+            product_id__category_id=category
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+        sales_by_category.append({
+            'category': category.category_name,
+            'total': float(total)
+        })
+    sales_by_category.sort(key=lambda x: x['total'], reverse=True)
+
+    labels = [item['category'] for item in sales_by_category]
+    data = [item['total'] for item in sales_by_category]
+
+    return {'labels': labels, 'data': data}
+
+def is_active_employee(user):
+    if user.is_authenticated and user.employee.is_active and (user.employee.role in ['Admin','Sales Executive','Inventory Manager']) :
+        return True
+    return False
 
 def is_active_admin(user):
     if user.is_authenticated and user.employee.role == 'Admin' and user.employee.is_active:
         return True
     return False
-
 @login_required(login_url='login')
-def toggle_employee_status(request,employee_id):
+def view_employee_details(request, employee_id):
+    try:
+        employee = Employee.objects.get(employee_id=employee_id)
+
+        if request.user.employee.employee_id == employee_id:
+            context = {'employee': employee}
+            return render(request, "employee_details.html", context)
+
+        elif is_active_admin(request.user):
+            context = {'employee': employee}
+            return render(request, "employee_details.html", context)
+        else:
+            messages.error(request, "You don't have permission to access this page.")
+            return redirect('error_403_view')
+    except Employee.DoesNotExist:
+        messages.error(request, "Employee not found")
+        return redirect('employee_management')
+
+@login_required()
+def edit_employee(request, employee_id):
     if not is_active_admin(request.user):
         messages.error(request, "You don't have permission to access this page.")
-        return redirect("error_403_view")
-
-    if request.method != "POST":
-        return redirect("employee_management")
-
+        return redirect('error_403_view')
     try:
-        employee = Employee.obects.filter(id = employee_id)
-        if employee.user == request.user:
-            messages.error(request, "You cannot deactivate your own account.")
-            return redirect("employee_management")
+        employee = Employee.objects.get(employee_id=employee_id)
 
-        action = request.POST.get("action")
-        if action == "activate":
-            employee.is_active = True
-            employee.user.is_active = True
-            messages.success(request, f"{employee.full_name} has been activated.")
-
-        elif action == "deactivate":
-            employee.is_active = False
-            employee.user.is_active = False
-            messages.success(request, f"{employee.full_name} has been deactivated.")
-
-        employee.save()
-        employee.user.save()
-
+        if request.method == "POST":
+            employeeEditForm = EmployeeEditForm(request.POST, request.FILES, instance=employee)
+            if employeeEditForm.is_valid():
+                user = employee.user
+                user.email = employeeEditForm.cleaned_data.get('email')
+                if employeeEditForm.cleaned_data.get('password'):
+                    user.set_password(employeeEditForm.cleaned_data.get('password'))
+                user.save()
+                employee_update = employeeEditForm.save(commit=False)
+                if 'photo' in request.FILES:
+                    if employee.photo:
+                        default_storage.delete(employee.photo.path)
+                    employee_update.photo = request.FILES['photo']
+                employee_update.save()
+                messages.success(request, "Employee updated successfully.")
+                return redirect("employee_management")
+            else:
+                messages.error(request, "Please correct the error below.")
+        else:
+            initial_data = {
+                'email': employee.user.email,
+                'full_name': employee.full_name,
+                'phone': employee.phone,
+                'role': employee.role,
+                'address': employee.address,
+                'is_active': employee.is_active,
+            }
+            employeeEditForm = EmployeeEditForm(initial=initial_data)
+        context = {'employee': employee, 'form': employeeEditForm}
+        return render(request, "edit_employee.html", context)
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found.")
-    return redirect("employee_management")
+        return redirect('employee_management')
+
 
 

@@ -1,13 +1,18 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
 
-{% block title %}Inventory Dashboard | Inventory Management System{% endblock %}
+{% block title %}Inventory Dashboard | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
     <span class="current">Inventory Dashboard</span>
 {% endblock %}
 
 {% block page_title %}Inventory Dashboard{% endblock %}
+{% block page_description %}Inventory overview and management{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with active_page='inventory_dashboard' %}
+{% endblock %}
 
 {% block content %}
     <!-- Key Metrics -->
@@ -71,13 +76,11 @@
             <div class="chart-header">
                 <h3 class="chart-title">Stock Levels by Category</h3>
                 <div class="chart-actions">
-                    <button class="text-sm border rounded p-1 px-2 hover:bg-gray-100">
-                        <i class="fas fa-download mr-1"></i> Export
-                    </button>
                 </div>
             </div>
             <div class="chart-body">
                 <canvas id="stockLevelChart"></canvas>
+                <script id="stock-by-category-data" type="application/json">{{ stock_by_category|safe }}</script>
             </div>
         </div>
 
@@ -94,6 +97,7 @@
             </div>
             <div class="chart-body">
                 <canvas id="turnoverChart"></canvas>
+                <script id="turnover-data" type="application/json">{{ turnover_data|safe }}</script>
             </div>
         </div>
     </div>
@@ -104,7 +108,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <h3 class="chart-title">Low Stock Items</h3>
-                <a href="{% url 'low_stock' %}" class="text-sm text-blue-500 hover:underline">View All</a>
+{#                <a href="{% url 'low_stock' %}" class="text-sm text-blue-500 hover:underline">View All</a>#}
             </div>
             <div class="p-4">
                 <table class="data-table">
@@ -130,7 +134,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{% url 'create_purchase_order' %}?product={{ product.id }}" class="text-sm text-blue-500 hover:underline">
+{#                                    <a href="{% url 'create_purchase_order' %}?product={{ product.id }}" class="text-sm text-blue-500 hover:underline">#}
                                         Create Order
                                     </a>
                                 </td>
@@ -150,7 +154,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <h3 class="chart-title">Recent Purchase Orders</h3>
-                <a href="{% url 'purchase_orders' %}" class="text-sm text-blue-500 hover:underline">View All</a>
+{#                <a href="{% url 'purchase_orders' %}" class="text-sm text-blue-500 hover:underline">View All</a>#}
             </div>
             <div class="p-4">
                 <table class="data-table">
@@ -186,77 +190,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="chart-card mb-6">
-        <div class="chart-header">
-            <h3 class="chart-title">Quick Actions</h3>
-        </div>
-        <div class="p-6 flex flex-wrap gap-4">
-            <a href="{% url 'add_product' %}" class="dashboard-button button-primary">
-                <i class="fas fa-plus mr-2"></i> Add New Product
-            </a>
-            <a href="{% url 'create_purchase_order' %}" class="dashboard-button button-outline">
-                <i class="fas fa-file-invoice mr-2"></i> Create Purchase Order
-            </a>
-            <a href="{% url 'product_list' %}" class="dashboard-button button-outline">
-                <i class="fas fa-list mr-2"></i> View All Products
-            </a>
-            <a href="{% url 'supplier_list' %}" class="dashboard-button button-outline">
-                <i class="fas fa-truck mr-2"></i> Manage Suppliers
-            </a>
-        </div>
-    </div>
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-        // Stock Level Chart
-        const stockLevelCtx = document.getElementById('stockLevelChart').getContext('2d');
-        new Chart(stockLevelCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Electronics', 'Clothing', 'Food', 'Home & Garden', 'Others'],
-                datasets: [{
-                    label: 'Current Stock',
-                    data: [120, 85, 40, 70, 35],
-                    backgroundColor: '#1a73e8',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Turnover Chart
-        const turnoverCtx = document.getElementById('turnoverChart').getContext('2d');
-        new Chart(turnoverCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Fast Moving',
-                    data: [12, 15, 18, 14, 17, 21],
-                    borderColor: '#34a853',
-                    backgroundColor: 'transparent',
-                },
-                    {
-                        label: 'Slow Moving',
-                        data: [5, 4, 3, 6, 2, 4],
-                        borderColor: '#fbbc05',
-                        backgroundColor: 'transparent',
-                    }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    </script>
+    <script src="{% static 'js/inventoryManager_dashboard.js' %}"></script>
 {% endblock %}

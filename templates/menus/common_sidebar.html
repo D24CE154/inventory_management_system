@@ -1,0 +1,96 @@
+<!-- Menu Sections -->
+<div class="menu-section">
+    <h3 class="menu-label">Main Navigation</h3>
+
+    <!-- Dashboard items based on role -->
+    {% if employee.role == 'Admin' %}
+        <a href="{% url 'adminDashboard' %}" class="menu-item {% if active_page == 'admin_dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Admin Dashboard</span>
+        </a>
+    {% elif employee.role == 'Inventory Manager' %}
+        <a href="{% url 'inventoryManagerDashboard' %}" class="menu-item {% if active_page == 'inventory_dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Inventory Dashboard</span>
+        </a>
+    {% elif employee.role == 'Sales Executive' %}
+        <a href="{% url 'salesExecutiveDashboard' %}" class="menu-item {% if active_page == 'salesExecutiveDashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Sales Dashboard</span>
+        </a>
+    {% endif %}
+</div>
+
+<!-- Admin Section -->
+{% if employee.role == 'Admin' %}
+    <div class="menu-section">
+        <h3 class="menu-label">Administration</h3>
+        <a href="{% url 'employee_management' %}" class="menu-item {% if active_page == 'employee_management' %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            <span>Employee Management</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'reports' %}active{% endif %}">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports & Analytics</span>
+        </a>
+    </div>
+{% endif %}
+
+<!-- Inventory Section -->
+{% if employee.role == 'Admin' or employee.role == 'Inventory Manager' %}
+    <div class="menu-section">
+        <h3 class="menu-label">Inventory</h3>
+        <a href="#" class="menu-item {% if active_page == 'product_management' %}active{% endif %}">
+            <i class="fas fa-box"></i>
+            <span>Products</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'categories' %}active{% endif %}">
+            <i class="fas fa-tags"></i>
+            <span>Categories</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'suppliers' %}active{% endif %}">
+            <i class="fas fa-truck"></i>
+            <span>Suppliers</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'purchase_orders' %}active{% endif %}">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Purchase Orders</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'low_stock' %}active{% endif %}">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Low Stock</span>
+        </a>
+    </div>
+{% endif %}
+
+<!-- Sales Section -->
+{% if employee.role == 'Admin' or employee.role == 'Sales Executive' %}
+    <div class="menu-section">
+        <h3 class="menu-label">Sales</h3>
+        <a href="#" class="menu-item {% if active_page == 'new_sale' %}active{% endif %}">
+            <i class="fas fa-cash-register"></i>
+            <span>New Sale</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'sales_history' %}active{% endif %}">
+            <i class="fas fa-history"></i>
+            <span>Sales History</span>
+        </a>
+        <a href="#" class="menu-item {% if active_page == 'customers' %}active{% endif %}">
+            <i class="fas fa-user-friends"></i>
+            <span>Customers</span>
+        </a>
+    </div>
+{% endif %}
+
+<!-- Common Section for All Users -->
+<div class="menu-section">
+    <h3 class="menu-label">Account</h3>
+    <a href="{% url 'employee_details' employee.employee_id %}" class="menu-item {% if active_page == 'profile' %}active{% endif %}">
+        <i class="fas fa-user"></i>
+        <span>My Profile</span>
+    </a>
+    <a href="{% url 'logout' %}" class="menu-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+    </a>
+</div>

@@ -66,20 +66,20 @@ AUTHENTICATION_BACKENDS = [
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 LOGIN_URL = '/employees/login/'
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
-LOGOUT_REDIRECT_URL = '/employees/login/'
+LOGOUT_REDIRECT_URL = '/employees/logout/'
 
 PASSWORD_RESET_TIMEOUT = 3600
 
 ROOT_URLCONF = 'inventory_management_system.urls'
-PROFILE_PICS_URL = '/profile_pics/'
-PROFILE_PICS_ROOT = os.path.join(BASE_DIR, 'profile_pics')
 STATIC_URL = '/static/'
+
+MEDIA_URL = '/profile_pics/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'profile_pics')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employees', 'static'),
     os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'inventory', 'static'),
-    os.path.join(BASE_DIR,'profile_pics')
+    os.path.join(BASE_DIR, 'inventory', 'static'),\
 ]
 
 TEMPLATES = [

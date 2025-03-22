@@ -4,28 +4,38 @@
 {% block title %}Employee Details | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
-    <a href="{% url 'employee_management' %}">Employee Management</a>
-    <span class="separator">/</span>
-    <span class="current">Employee Details</span>
+    {% if request.user.employee.role == 'Admin' %}
+        <a href="{% url 'employee_management' %}">Employee Management</a>
+        <span class="separator">/</span>
+        <span class="current">Employee Details</span>
+    {% else %}
+        <span class="current">My Profile</span>
+    {% endif %}
 {% endblock %}
+
 
 {% block page_title %}Employee Details{% endblock %}
 {% block page_description %}View employee information{% endblock %}
+
 {% block sidebar_menu %}
-    {% include 'menus/admin_menu.html' with active_page='employee_management' %}
+    {% include 'menus/common_sidebar.html' with active_page='employee_management' %}
 {% endblock %}
+
 {% block content %}
     <div class="chart-card">
         <div class="chart-header">
             <h3 class="chart-title">{{ employee.full_name }}</h3>
-            <a href="{% url 'edit_employee' employee.employee_id %}" class="btn btn-primary">
-                <i class="fas fa-edit mr-2"></i> Edit
-            </a>
+            {% if employee.role == 'Admin' %}
+                <a href="{% url 'edit_employee' employee.employee_id %}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i> Edit
+                </a>
+            {% endif %}
         </div>
+
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col items-center">
-                {% if employee.photo %}
-                    <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}"
+                {% if request.user.employee.photo %}
+                    <img src="{{ request.user.employee.photo.url }}" alt="{{ request.user.employee.full_name }}"
                          class="w-48 h-48 rounded-full object-cover mb-4"
                          onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
                 {% else %}
@@ -34,7 +44,7 @@
                 {% endif %}
                 <h2 class="text-xl font-bold">{{ employee.full_name }}</h2>
                 <span class="text-gray-600">{{ employee.role }}</span>
-                {% if employee.is_active %}
+                {% if request.user.employee.is_active %}
                     <span class="status success mt-2">Active</span>
                 {% else %}
                     <span class="status danger mt-2">Inactive</span>
@@ -43,7 +53,7 @@
             <div>
                 <div class="mb-4">
                     <h3 class="text-sm font-semibold text-gray-500 mb-1">Email</h3>
-                    <p>{{ employee.user.email }}</p>
+                    <p>{{ request.user.employee.user.email }}</p>
                 </div>
                 <div class="mb-4">
                     <h3 class="text-sm font-semibold text-gray-500 mb-1">Phone</h3>
