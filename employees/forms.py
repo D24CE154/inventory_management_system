@@ -116,3 +116,54 @@ class ResetPasswordForm(SignupForm):
         super().__init__(*args, **kwargs)
         for field in ["email", "phone", "full_name", "address", "photo"]:
             self.fields.pop(field, None)
+
+class EmployeeEditForm(forms.ModelForm):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'Email Address'})
+    )
+    password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'New Password'})
+    )
+    confirm_password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirm Password'})
+    )
+
+    # Change is_active from checkbox to dropdown
+    STATUS_CHOICES = (
+        (True, 'Active'),
+        (False, 'Inactive')
+    )
+    is_active = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-input'}),
+    )
+
+    class Meta:
+        model = Employee
+        fields = ['full_name', 'phone', 'role', 'address', 'photo', 'is_active']
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Full Name'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Phone Number'}),
+            'role': forms.Select(attrs={'class': 'form-input'}),
+            'address': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Address'}),
+            'photo': forms.FileInput(attrs={'class': 'form-input'})
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', 'Passwords do not match')
+
+        # Convert is_active from string to boolean
+        is_active = cleaned_data.get('is_active')
+        if is_active == 'True':
+            cleaned_data['is_active'] = True
+        elif is_active == 'False':
+            cleaned_data['is_active'] = False
+
+        return cleaned_data

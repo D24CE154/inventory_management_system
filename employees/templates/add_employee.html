@@ -57,6 +57,7 @@
                         <div class="form-group">
                             <label for="id_full_name" class="form-label">Full Name</label>
                             {{ form.full_name }}
+                            <span class="form-help">{{ form.full_name.help_text }}</span>
                             {% if form.full_name.errors %}
                                 <span class="form-error">{{ form.full_name.errors.0 }}</span>
                             {% endif %}
@@ -65,6 +66,7 @@
                         <div class="form-group">
                             <label for="id_email" class="form-label">Email</label>
                             {{ form.email }}
+                            <span class="form-help">{{ form.email.help_text }}</span>
                             {% if form.email.errors %}
                                 <span class="form-error">{{ form.email.errors.0 }}</span>
                             {% endif %}
@@ -85,6 +87,7 @@
                                 <button type="button" class="password-toggle" onclick="togglePassword('id_password')">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <span class="form-help">{{ form.password.help_text }}</span>
                             </div>
                             {% if form.password.errors %}
                                 <span class="form-error">{{ form.password.errors.0 }}</span>
@@ -95,6 +98,7 @@
                             <label for="id_confirm_password" class="form-label">Confirm Password</label>
                             <div class="relative">
                                 {{ form.confirm_password }}
+                                <span class="form-help">{{ form.confirm_password.help_text }}</span>
                                 <button type="button" class="password-toggle" onclick="togglePassword('id_confirm_password')">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -109,6 +113,7 @@
                         <div class="form-group">
                             <label for="id_phone" class="form-label">Phone</label>
                             {{ form.phone }}
+                            <span class="form-help">{{ form.phone.help_text }}</span>
                             {% if form.phone.errors %}
                                 <span class="form-error">{{ form.phone.errors.0 }}</span>
                             {% endif %}
@@ -117,6 +122,7 @@
                         <div class="form-group">
                             <label for="id_address" class="form-label">Address</label>
                             {{ form.address }}
+                            <span class="form-help">{{ form.address.help_text }}</span>
                             {% if form.address.errors %}
                                 <span class="form-error">{{ form.address.errors.0 }}</span>
                             {% endif %}
@@ -124,11 +130,12 @@
 
                         <div class="form-group">
                             <label for="id_photo" class="form-label">Profile Photo</label>
-                            {{ form.photo }}
+                            {{ form.photo }}<br>
+
+                            <span class="form-help">{{ form.photo.help_text }}</span>
                             {% if form.photo.errors %}
                                 <span class="form-error">{{ form.photo.errors.0 }}</span>
                             {% endif %}
-                            <div class="form-help">Upload a profile picture (Max 2MB)</div>
                         </div>
                     </div>
                 </div>

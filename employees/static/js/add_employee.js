@@ -29,28 +29,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     }
-
-    // Preview uploaded profile photo
-    const photoInput = document.getElementById('id_photo');
-    if (photoInput) {
-        photoInput.addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                // Check if preview element exists, if not create it
-                let preview = document.querySelector('.photo-preview');
-                if (!preview) {
-                    preview = document.createElement('img');
-                    preview.className = 'photo-preview';
-                    preview.style.display = 'block';
-                    this.parentNode.appendChild(preview);
-                }
-
-                // Set the source to the selected file
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                }
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-    }
 });

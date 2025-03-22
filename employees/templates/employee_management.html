@@ -1,9 +1,11 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
+
+{% block title %}Employee Management | IG Mobile{% endblock %}
+
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/employee_management.css' %}">
 {% endblock %}
-{% block title %}Employee Management | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
     <span class="current">Employee Management</span>
@@ -11,15 +13,17 @@
 
 {% block page_title %}Employee Management{% endblock %}
 {% block page_description %}Manage all employee accounts{% endblock %}
+
 {% block sidebar_menu %}
     {% include 'menus/admin_menu.html' with active_page='employee_management' %}
 {% endblock %}
+
 {% block content %}
     <div class="mb-4 flex justify-between items-center">
         <div>
             <form method="GET" action="{% url 'employee_management' %}" class="flex items-center">
                 <div class="relative">
-                    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search employees..." class="form-input">
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search employees..." class="form-input">
                     <button type="submit" class="absolute right-0 top-0 mt-2 mr-2">
                         <i class="fas fa-search text-gray-500"></i>
                     </button>
@@ -41,6 +45,7 @@
             <table class="data-table w-full">
                 <thead>
                 <tr>
+                    <th class="p-4 text-center">ID</th>
                     <th class="p-4 text-left">Name</th>
                     <th class="p-4 text-left">Email</th>
                     <th class="p-4 text-left">Phone</th>
@@ -50,78 +55,54 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for employee in employees %}
-                    <tr>
-                        <td class="p-4">
-                            <div class="flex items-center">
-                                {% if employee.photo %}
-                                    <!-- Direct path reference without static tag -->
-                                    <img src="/profile_pics/{{ employee.photo.name }}"
-                                         alt="{{ employee.full_name }}"
-                                         class="h-8 w-8 rounded-full mr-3"
-                                         onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
-                                {% else %}
-                                    <img src="{% static 'profile_pics/default-avatar.png' %}"
-                                         alt="{{ employee.full_name }}"
-                                         class="h-8 w-8 rounded-full mr-3">
-                                {% endif %}
-                                <span>{{ employee.full_name }}</span>
-                            </div>
-                        </td>
-                        <td class="p-4">{{ employee.user.email }}</td>
-                        <td class="p-4">{{ employee.phone }}</td>
-                        <td class="p-4">{{ employee.role }}</td>
-                        <td class="p-4 text-center">
-                            {% if employee.is_active %}
-                                <span class="status success">Active</span>
-                            {% else %}
-                                <span class="status danger">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td class="p-4 text-center">
-                            <div class="flex justify-center space-x-2">
-                                <a href="#" class="btn btn-icon" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="#" class="btn btn-icon" title="Edit Employee">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% if employee.id %}
-                                    {% if employee.user.id != request.user.id %}
-                                        {% if employee.is_active %}
-                                            <form method="POST" action="{% url 'toggle_employee_status' employee.id %}" class="inline-form">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="deactivate">
-                                                <button type="submit" class="btn btn-icon text-red-500" title="Deactivate"
-                                                        onclick="return confirm('Are you sure you want to deactivate this employee?')">
-                                                    <i class="fas fa-user-slash"></i>
-                                                </button>
-                                            </form>
-                                        {% else %}
-                                            <form method="POST" action="{% url 'toggle_employee_status' employee.id %}" class="inline-form">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="activate">
-                                                <button type="submit" class="btn btn-icon text-green-500" title="Activate"
-                                                        onclick="return confirm('Are you sure you want to activate this employee?')">
-                                                    <i class="fas fa-user-check"></i>
-                                                </button>
-                                            </form>
-                                        {% endif %}
+                {% if employees %}
+                    {% for employee in employees %}
+                        <tr>
+                            <td class="p-4">{{ employee.employee_id }}</td>
+                            <td class="p-4">
+                                <div class="flex items-center">
+                                    {% if employee.photo %}
+                                        <img src="{{ employee.photo.url }}"
+                                             alt="{{ employee.full_name }}"
+                                             class="h-8 w-8 rounded-full mr-3"
+                                             onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
+                                    {% else %}
+                                        <img src="{% static 'profile_pics/default-avatar.png' %}"
+                                             alt="{{ employee.full_name }}"
+                                             class="h-8 w-8 rounded-full mr-3">
                                     {% endif %}
+                                    <span>{{ employee.full_name }}</span>
+                                </div>
+                            </td>
+                            <td class="p-4">{{ employee.user.email }}</td>
+                            <td class="p-4">{{ employee.phone }}</td>
+                            <td class="p-4">{{ employee.role }}</td>
+                            <td class="p-4 text-center">
+                                {% if employee.is_active %}
+                                    <span class="status success">Active</span>
+                                {% else %}
+                                    <span class="status danger">Inactive</span>
                                 {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                {% empty %}
+                            </td>
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <a href="{% url 'employee_details' employee.employee_id %}" class="btn btn-icon" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'edit_employee' employee.employee_id %}" class="btn btn-icon" title="Edit Employee">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
                     <tr>
                         <td colspan="6" class="p-4 text-center text-gray-500">No employees found</td>
                     </tr>
-                {% endfor %}
+                {% endif %}
                 </tbody>
             </table>
         </div>
     </div>
-{% endblock %}
-
-{% block extra_js %}
 {% endblock %}

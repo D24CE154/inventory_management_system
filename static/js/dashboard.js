@@ -58,3 +58,29 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDate.textContent = now.toLocaleDateString('en-IN', options);
     }
 });
+
+// Message handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle alert dismissals
+    document.querySelectorAll('.alert-dismissible .close').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const alert = this.closest('.alert');
+            alert.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(function() {
+                alert.remove();
+            }, 300);
+        });
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    document.querySelectorAll('.alert').forEach(function(alert) {
+        setTimeout(function() {
+            if (alert) {
+                alert.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(function() {
+                    alert.remove();
+                }, 300);
+            }
+        }, 5000);
+    });
+});

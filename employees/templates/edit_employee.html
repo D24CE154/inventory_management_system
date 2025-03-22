@@ -1,0 +1,212 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
+{% endblock %}
+
+{% block title %}Edit Employee | IG Mobile{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'employee_management' %}">Employee Management</a>
+    <span class="separator">/</span>
+    <span class="current">Edit Employee</span>
+{% endblock %}
+
+{% block page_title %}Edit Employee{% endblock %}
+{% block page_description %}Update employee information{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/admin_menu.html' with active_page='employee_management' %}
+{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="form-group">
+                        <label for="id_full_name" class="form-label">Full Name</label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <span class="form-error">{{ form.full_name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_email" class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <span class="form-error">{{ form.email.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_role" class="form-label">Role</label>
+                        {% if employee.user == request.user %}
+                            <select class="form-input" disabled>
+                                <option>Admin</option>
+                            </select>
+                            <small class="text-warning mt-1 block">You cannot change your own admin role</small>
+                            <input type="hidden" name="role" value="Admin">
+                        {% else %}
+                            {{ form.role }}
+                        {% endif %}
+                        {% if form.role.errors %}
+                            <span class="form-error">{{ form.role.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_password" class="form-label">New Password (leave empty to keep current)</label>
+                        <div class="relative">
+                            {{ form.password }}
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <span class="form-error">{{ form.password.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_confirm_password" class="form-label">Confirm Password</label>
+                        <div class="relative">
+                            {{ form.confirm_password }}
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_confirm_password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.confirm_password.errors %}
+                            <span class="form-error">{{ form.confirm_password.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label for="id_phone" class="form-label">Phone</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <span class="form-error">{{ form.phone.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_address" class="form-label">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <span class="form-error">{{ form.address.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_is_active" class="form-label">Account Status</label>
+                        {% if employee.user == request.user %}
+                            <select class="form-input" disabled>
+                                <option>Active</option>
+                            </select>
+                            <small class="text-warning mt-1 block">You cannot deactivate your own account</small>
+                            <input type="hidden" name="is_active" value="True">
+                        {% else %}
+                            {{ form.is_active }}
+                        {% endif %}
+
+                        <div class="mt-2">
+                            {% if employee.is_active %}
+                                <span class="status success">Currently Active</span>
+                            {% else %}
+                                <span class="status danger">Currently Inactive</span>
+                            {% endif %}
+                        </div>
+                        {% if form.is_active.errors %}
+                            <span class="form-error">{{ form.is_active.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_photo" class="form-label">Profile Photo</label>
+                        <div class="flex items-center mb-2">
+                            {% if employee.photo %}
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}"
+                                     class="w-16 h-16 rounded-full object-cover mr-4" id="current-photo"
+                                     onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
+                            {% else %}
+                                <img src="{% static 'profile_pics/default-avatar.png' %}"
+                                     alt="{{ employee.full_name }}" class="w-16 h-16 rounded-full object-cover mr-4"
+                                     id="current-photo">
+                            {% endif %}
+                            <span class="text-sm text-gray-500">Current photo</span>
+                        </div>
+                        {{ form.photo }}
+                        <div class="photo-preview-container mt-2">
+                            <img id="photo-preview" alt="Preview" style="display: none;">
+                            <button type="button" id="cancel-upload" class="btn btn-sm btn-outline mt-2"
+                                    style="display: none;">
+                                Cancel Upload
+                            </button>
+                        </div>
+                        {% if form.photo.errors %}
+                            <span class="form-error">{{ form.photo.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions mt-6">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'employee_management' %}" class="btn btn-outline ml-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleButton = passwordInput.nextElementSibling.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function setupPhotoPreview() {
+            const photoInput = document.getElementById('id_photo');
+            const photoPreview = document.getElementById('photo-preview');
+            const currentPhoto = document.getElementById('current-photo');
+            const cancelUpload = document.getElementById('cancel-upload');
+
+            if (photoInput && photoPreview && cancelUpload) {
+                photoInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            photoPreview.src = e.target.result;
+                            photoPreview.style.display = 'block';
+                            cancelUpload.style.display = 'block';
+                            currentPhoto.style.display = 'none';
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+
+                cancelUpload.addEventListener('click', function() {
+                    photoInput.value = '';
+                    photoPreview.style.display = 'none';
+                    cancelUpload.style.display = 'none';
+                    currentPhoto.style.display = 'block';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', setupPhotoPreview);
+    </script>
+{% endblock %}
