@@ -1,0 +1,102 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Add Supplier | IG Mobile{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/add_supplier.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+    {% if logged_in_employee.role == 'Admin' %}
+        <a href="{% url 'adminDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Inventory Manager' %}
+        <a href="{% url 'inventoryManagerDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Sales Executive' %}
+        <a href="{% url 'salesExecutiveDashboard' %}">Dashboard</a>
+    {% else %}
+        <a href="#">Dashboard</a>
+    {% endif %}
+
+    <span class="separator">/</span>
+    <a href="{% url 'suppliers' %}">Suppliers</a>
+    <span class="separator">/</span>
+    <span class="current">Add Supplier</span>
+
+{% endblock %}
+
+{% block page_title %}Add New Supplier{% endblock %}
+{% block page_description %}Create a new supplier record{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='suppliers' %}
+{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="form-group">
+                        <label for="{{ supplierForm.supplier_name.id_for_label }}" class="form-label">Company Name</label>
+                        {{ supplierForm.supplier_name }}
+                        <span class="form-help">{{ supplierForm.supplier_name.help_text }}</span>
+                        {% if supplierForm.supplier_name.errors %}
+                            <span class="form-error">{{ supplierForm.supplier_name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ supplierForm.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                        {{ supplierForm.contact_person }}
+                        <span class="form-help">{{ supplierForm.contact_person.help_text }}</span>
+                        {% if supplierForm.contact_person.errors %}
+                            <span class="form-error">{{ supplierForm.contact_person.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ supplierForm.supplier_phone.id_for_label }}" class="form-label">Phone Number</label>
+                        {{ supplierForm.supplier_phone }}
+                        <span class="form-help">{{ supplierForm.supplier_phone.help_text }}</span>
+                        {% if supplierForm.supplier_phone.errors %}
+                            <span class="form-error">{{ supplierForm.supplier_phone.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label for="{{ supplierForm.supplier_mail.id_for_label }}" class="form-label">Email Address</label>
+                        {{ supplierForm.supplier_mail }}
+                        <span class="form-help">{{ supplierForm.supplier_mail.help_text }}</span>
+                        {% if supplierForm.supplier_mail.errors %}
+                            <span class="form-error">{{ supplierForm.supplier_mail.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ supplierForm.supplier_address.id_for_label }}" class="form-label">Address</label>
+                        {{ supplierForm.supplier_address }}
+                        <span class="form-help">{{ supplierForm.supplier_address.help_text }}</span>
+                        {% if supplierForm.supplier_address.errors %}
+                            <span class="form-error">{{ supplierForm.supplier_address.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions mt-6">
+                <button type="submit" class="btn btn-primary">Add Supplier</button>
+                <a href="{% url 'suppliers' %}" class="btn btn-outline ml-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

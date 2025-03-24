@@ -1,0 +1,151 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Supplier Details | IG Mobile{% endblock %}
+
+{% block breadcrumb %}
+    {% if logged_in_employee.role == 'Admin' %}
+        <a href="{% url 'adminDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Inventory Manager' %}
+        <a href="{% url 'inventoryManagerDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Sales Executive' %}
+        <a href="{% url 'salesExecutiveDashboard' %}">Dashboard</a>
+    {% else %}
+        <a href="#">Dashboard</a>
+    {% endif %}
+    <span class="separator">/</span>
+    <a href="{% url 'suppliers' %}">Suppliers</a>
+    <span class="separator">/</span>
+    <span class="current">Supplier Details</span>
+{% endblock %}
+
+{% block page_title %}Supplier Details{% endblock %}
+{% block page_description %}View supplier information{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='suppliers' %}
+{% endblock %}
+
+{% block content %}
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">{{ supplier.supplier_name }}</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'edit_supplier' supplier.supplier_id %}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i>Edit Supplier
+                </a>
+                <button onclick="confirmDeleteSupplier('{{ supplier.supplier_id }}', '{{ supplier.supplier_name }}')" class="btn btn-danger">
+                    <i class="fas fa-trash mr-2"></i>Delete Supplier
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Company Name</h3>
+                    <p>{{ supplier.supplier_name }}</p>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Contact Person</h3>
+                    <p>{{ supplier.contact_person }}</p>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Phone Number</h3>
+                    <p>{{ supplier.supplier_phone }}</p>
+                </div>
+            </div>
+            <div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Email Address</h3>
+                    <p>{{ supplier.supplier_mail }}</p>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Address</h3>
+                    <p>{{ supplier.supplier_address }}</p>
+                </div>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Added On</h3>
+                    <p>{{ supplier.created_at|date:"F d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 border-t pt-6">
+            <h3 class="text-lg font-semibold mb-4">Purchase Orders</h3>
+
+            {% if purchase_orders %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>PO ID</th>
+                            <th>Date</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for order in purchase_orders %}
+                            <tr>
+                                <td>{{ order.purchase_order_id }}</td>
+                                <td>{{ order.received_date|date:"M d, Y" }}</td>
+                                <td>₹{{ order.total_cost }}</td>
+                                <td>
+                                    <span class="status-badge {{ order.status|lower }}">{{ order.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <h3>No Purchase Orders</h3>
+                    <p>There are no purchase orders for this supplier yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDeleteSupplier(id, name) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: `You are about to delete supplier "${name}". This action cannot be undone.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `{% url 'delete_supplier' '0' %}`.replace('0', id);
+
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = 'csrfmiddlewaretoken';
+                    csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    form.appendChild(csrfToken);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+{% endblock %}

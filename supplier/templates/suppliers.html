@@ -1,0 +1,103 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Suppliers | IG Mobile{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/common_styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/suppliers.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+    <span class="current">Suppliers</span>
+{% endblock %}
+
+{% block page_title %}Supplier Management{% endblock %}
+{% block page_description %}Manage all supplier accounts{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='add_employee' %}
+{% endblock %}
+
+{% block content %}
+    <div class="mb-4 flex justify-between items-center">
+        <form method="GET" action="{% url 'suppliers' %}" class="flex items-center">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search suppliers..." class="form-input">
+            <button type="submit" class="btn btn-outline" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <a href="{% url 'add_supplier' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i> Add Supplier
+        </a>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Supplier List</h3>
+        </div>
+        <div class="p-0">
+            <table class="data-table w-full">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Company Name</th>
+        <th>Contact Person</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for supplier in suppliers %}
+        <tr>
+            <td>{{ supplier.supplier_id }}</td>
+            <td>{{ supplier.supplier_name }}</td>
+            <td>{{ supplier.contact_person }}</td>
+            <td>{{ supplier.supplier_mail }}</td>
+            <td>{{ supplier.supplier_phone }}</td>
+            <td>
+                <div class="action-buttons">
+                    <a href="{% url 'view_supplier' supplier.supplier_id %}" class="btn-icon btn-view">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'edit_supplier' supplier.supplier_id %}" class="btn-icon btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button onclick="confirmDeleteSupplier('{{ supplier.supplier_id }}', '{{ supplier.supplier_name }}')" class="btn-icon btn-delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="6" class="text-center text-gray-500">No suppliers found</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDeleteSupplier(id, name) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: `Delete supplier ${name}? This action cannot be undone.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/suppliers/delete/${id}/`;
+                }
+            });
+        }
+    </script>
+{% endblock %}
