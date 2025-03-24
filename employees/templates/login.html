@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{% static 'js/navigation-handler.js' %}"></script>
+
 
 </head>
 <body>
@@ -77,5 +77,14 @@
         }
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.location.search.includes("logged_out=True")) {
+            console.log("User logged out. Refreshing page to clear cache.");
+            window.location.reload(true); // ✅ Forces full refresh to clear cached session
+        }
+    });
+</script>
+
 </body>
 </html>

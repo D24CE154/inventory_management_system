@@ -132,9 +132,9 @@
                             {% if employee.photo %}
                                 <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}"
                                      class="w-16 h-16 rounded-full object-cover mr-4" id="current-photo"
-                                     onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
+                                     onerror="this.onerror=null; this.src='{% static 'default-avatar.svg' %}'">
                             {% else %}
-                                <img src="{% static 'profile_pics/default-avatar.png' %}"
+                                <img src="{% static 'default-avatar.svg' %}"
                                      alt="{{ employee.full_name }}" class="w-16 h-16 rounded-full object-cover mr-4"
                                      id="current-photo">
                             {% endif %}

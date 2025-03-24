@@ -123,11 +123,13 @@ class EmployeeEditForm(forms.ModelForm):
     )
     password = forms.CharField(
         required=False,
-        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'New Password'})
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'New Password'}),
+        help_text="Password must be at least 8 characters with uppercase, lowercase, number and special character."
     )
     confirm_password = forms.CharField(
         required=False,
-        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirm Password'})
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirm Password'}),
+        help_text="Enter the same password as above."
     )
 
     # Change is_active from checkbox to dropdown
@@ -159,7 +161,6 @@ class EmployeeEditForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', 'Passwords do not match')
 
-        # Convert is_active from string to boolean
         is_active = cleaned_data.get('is_active')
         if is_active == 'True':
             cleaned_data['is_active'] = True
@@ -167,3 +168,35 @@ class EmployeeEditForm(forms.ModelForm):
             cleaned_data['is_active'] = False
 
         return cleaned_data
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+
+        if password:
+            pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$'
+
+            if not re.match(pattern, password):
+                raise forms.ValidationError(
+                    "Password must be at least 8 characters and include uppercase, "
+                    "lowercase, number, and special character (@$!%*?&)."
+                )
+
+        return password
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get("photo")
+
+        if photo:
+            try:
+                img = Image.open(photo)
+                img.verify()
+            except Exception:
+                raise forms.ValidationError("Invalid image file. Please upload a valid image.")
+
+            max_size = 2 * 1024 * 1024
+
+    def clean_employee_address(self):
+        address = self.cleaned_data.get('address')
+        if len(address.strip()) < 10:
+            raise forms.ValidationError("Please provide a complete address (at least 10 characters).")
+        return address.strip()

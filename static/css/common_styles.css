@@ -1,0 +1,116 @@
+/* Common Styles for Consistent UI */
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #212529;
+}
+
+/* Table Styling */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+.data-table td {
+    padding: 10px;
+    border-top: 1px solid #e9ecef;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+.data-table tr:hover {
+    background-color: #f1f3f5;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Button styling */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid;
+    text-decoration: none;
+    white-space: nowrap;
+    position: relative;
+}
+.btn-text {
+    display: none;
+    margin-left: 5px;
+}
+
+/* Show text on hover */
+.btn-icon:hover .btn-text {
+    display: inline;
+}
+.btn-icon i {
+    margin-right: 5px;
+}
+/* Action Buttons */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid;
+    text-decoration: none;
+}
+
+
+/* View Button */
+.btn-view {
+    background-color: transparent;
+    color: #1976d2;
+    border-color: #1976d2;
+}
+
+.btn-view:hover {
+    background-color: #bbdefb;
+}
+
+/* Edit Button */
+.btn-edit {
+    background-color: transparent;
+    color: #f9a825;
+    border-color: #f9a825;
+}
+
+.btn-edit:hover {
+    background-color: #fff8e1;
+}
+
+/* Delete Button */
+.btn-delete {
+    background-color: transparent;
+    color: #c62828;
+    border-color: #c62828;
+}
+
+.btn-delete:hover {
+    background-color: #ffebee;
+}

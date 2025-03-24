@@ -4,7 +4,7 @@
 {% block title %}Employee Details | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
-    {% if request.user.employee.role == 'Admin' %}
+    {% if logged_in_employee.role == 'Admin' %}
         <a href="{% url 'employee_management' %}">Employee Management</a>
         <span class="separator">/</span>
         <span class="current">Employee Details</span>
@@ -13,38 +13,44 @@
     {% endif %}
 {% endblock %}
 
-
 {% block page_title %}Employee Details{% endblock %}
 {% block page_description %}View employee information{% endblock %}
 
 {% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with active_page='employee_management' %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='employee_management' %}
 {% endblock %}
 
 {% block content %}
     <div class="chart-card">
         <div class="chart-header">
             <h3 class="chart-title">{{ employee.full_name }}</h3>
-            {% if employee.role == 'Admin' %}
+            <div class="flex gap-2">
+            {% if logged_in_employee.role == 'Admin' %}
                 <a href="{% url 'edit_employee' employee.employee_id %}" class="btn btn-primary">
-                    <i class="fas fa-edit mr-2"></i> Edit
+                    <i class="fas fa-edit mr-2"></i>Edit Employee
                 </a>
             {% endif %}
+                {% if logged_in_employee.role == 'Admin' and logged_in_employee.employee_id != employee.employee_id %}
+                    <button onclick="confirmDeleteEmployee('{{ employee.employee_id }}', '{{ employee.full_name }}')" class="btn btn-danger">
+                        <i class="fas fa-trash mr-2"></i>Delete Employee
+                    </button>
+                {% endif %}
+            </div>
         </div>
 
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col items-center">
-                {% if request.user.employee.photo %}
-                    <img src="{{ request.user.employee.photo.url }}" alt="{{ request.user.employee.full_name }}"
+                {% if employee.photo %}
+                    <img src="{{ employee.photo.url }}" alt="{{ employee.full_name }}"
                          class="w-48 h-48 rounded-full object-cover mb-4"
-                         onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
+                         onerror="this.onerror=null; this.src='{% static 'default-avatar.svg' %}'">
                 {% else %}
-                    <img src="{% static 'profile_pics/default-avatar.png' %}"
+                    <img src="{% static 'default-avatar.svg' %}"
                          alt="{{ employee.full_name }}" class="w-48 h-48 rounded-full object-cover mb-4">
                 {% endif %}
                 <h2 class="text-xl font-bold">{{ employee.full_name }}</h2>
                 <span class="text-gray-600">{{ employee.role }}</span>
-                {% if request.user.employee.is_active %}
+                {% if employee.is_active %}
                     <span class="status success mt-2">Active</span>
                 {% else %}
                     <span class="status danger mt-2">Inactive</span>
@@ -53,7 +59,7 @@
             <div>
                 <div class="mb-4">
                     <h3 class="text-sm font-semibold text-gray-500 mb-1">Email</h3>
-                    <p>{{ request.user.employee.user.email }}</p>
+                    <p>{{ employee.user.email }}</p>
                 </div>
                 <div class="mb-4">
                     <h3 class="text-sm font-semibold text-gray-500 mb-1">Phone</h3>
@@ -74,4 +80,59 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modal = document.getElementById("delete-employee-modal");
+            const employeeName = document.getElementById("employee-name");
+            const deleteForm = document.getElementById("delete-employee-form");
+            const cancelButton = document.querySelector(".close-modal");
+
+            // ✅ Ensure modal is hidden on page load
+            if (modal) {
+                modal.classList.remove("show");
+            }
+
+            // ✅ Function to Show Delete Confirmation Popup
+            window.confirmDeleteEmployee = function (id, name) {
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: `You are about to delete employee ${name}. This action cannot be undone.`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/employees/delete/${id}/`; // ✅ Redirect to delete employee
+                    }
+                });
+            };
+
+            // ✅ Function to Close Delete Modal (If using the old modal-based system)
+            window.closeDeleteModal = function () {
+                if (modal) {
+                    modal.classList.remove("show");  // Hide modal
+                }
+            };
+
+            // ✅ Close modal when clicking outside the modal content
+            window.onclick = function (event) {
+                if (event.target === modal) {
+                    closeDeleteModal();
+                }
+            };
+
+            // ✅ Close modal when clicking the Cancel (X) button
+            if (cancelButton) {
+                cancelButton.addEventListener("click", closeDeleteModal);
+            } else {
+                console.error("Cancel button not found!");
+            }
+        });
+    </script>
 {% endblock %}

@@ -4,6 +4,7 @@
 {% block title %}Employee Management | IG Mobile{% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/common_styles.css' %}">
     <link rel="stylesheet" href="{% static 'css/employee_management.css' %}">
 {% endblock %}
 
@@ -20,21 +21,14 @@
 
 {% block content %}
     <div class="mb-4 flex justify-between items-center">
-        <div>
-            <form method="GET" action="{% url 'employee_management' %}" class="flex items-center">
-                <div class="relative">
-                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search employees..." class="form-input">
-                    <button type="submit" class="absolute right-0 top-0 mt-2 mr-2">
-                        <i class="fas fa-search text-gray-500"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div>
-            <a href="{% url 'add_employee' %}" class="btn btn-primary">
-                <i class="fas fa-plus mr-2"></i> Add Employee
-            </a>
-        </div>
+        <form method="GET" action="{% url 'employee_management' %}" class="flex items-center">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search employees..." class="form-input">
+            <button type="submit" class="btn btn-outline" title="Search">
+                <i class="fas fa-search"></i>
+            </button>        </form>
+        <a href="{% url 'add_employee' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i> Add Employee
+        </a>
     </div>
 
     <div class="chart-card">
@@ -45,64 +39,72 @@
             <table class="data-table w-full">
                 <thead>
                 <tr>
-                    <th class="p-4 text-center">ID</th>
-                    <th class="p-4 text-left">Name</th>
-                    <th class="p-4 text-left">Email</th>
-                    <th class="p-4 text-left">Phone</th>
-                    <th class="p-4 text-left">Role</th>
-                    <th class="p-4 text-center">Status</th>
-                    <th class="p-4 text-center">Actions</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% if employees %}
-                    {% for employee in employees %}
-                        <tr>
-                            <td class="p-4">{{ employee.employee_id }}</td>
-                            <td class="p-4">
-                                <div class="flex items-center">
-                                    {% if employee.photo %}
-                                        <img src="{{ employee.photo.url }}"
-                                             alt="{{ employee.full_name }}"
-                                             class="h-8 w-8 rounded-full mr-3"
-                                             onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'">
-                                    {% else %}
-                                        <img src="{% static 'profile_pics/default-avatar.png' %}"
-                                             alt="{{ employee.full_name }}"
-                                             class="h-8 w-8 rounded-full mr-3">
-                                    {% endif %}
-                                    <span>{{ employee.full_name }}</span>
-                                </div>
-                            </td>
-                            <td class="p-4">{{ employee.user.email }}</td>
-                            <td class="p-4">{{ employee.phone }}</td>
-                            <td class="p-4">{{ employee.role }}</td>
-                            <td class="p-4 text-center">
-                                {% if employee.is_active %}
-                                    <span class="status success">Active</span>
-                                {% else %}
-                                    <span class="status danger">Inactive</span>
-                                {% endif %}
-                            </td>
-                            <td class="p-4 text-center">
-                                <div class="flex justify-center space-x-2">
-                                    <a href="{% url 'employee_details' employee.employee_id %}" class="btn btn-icon" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{% url 'edit_employee' employee.employee_id %}" class="btn btn-icon" title="Edit Employee">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                {% else %}
+                {% for employee in employees %}
                     <tr>
-                        <td colspan="6" class="p-4 text-center text-gray-500">No employees found</td>
+                        <td>{{ employee.employee_id }}</td>
+                        <td>{{ employee.full_name }}</td>
+                        <td>{{ employee.user.email }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.role }}</td>
+                        <td>
+                            {% if employee.is_active %}
+                                <span class="status success">Active</span>
+                            {% else %}
+                                <span class="status danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'employee_details' employee.employee_id %}" class="btn-icon btn-view">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'edit_employee' employee.employee_id %}" class="btn-icon btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if request.user.employee.role == 'Admin' and request.user.employee.employee_id != employee.employee_id %}
+                                <button onclick="confirmDeleteEmployee('{{ employee.employee_id }}', '{{ employee.full_name }}')" class="btn-icon btn-delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            {% endif %}
+                        </td>
                     </tr>
-                {% endif %}
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-gray-500">No employees found</td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDeleteEmployee(id, name) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: `Delete employee ${name}? This action cannot be undone.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/employees/delete/${id}/`;
+                }
+            });
+        }
+    </script>
 {% endblock %}
