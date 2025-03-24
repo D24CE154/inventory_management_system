@@ -64,22 +64,21 @@ AUTHENTICATION_BACKENDS = [
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-LOGIN_URL = '/employees/login/'
+LOGIN_URL = ''
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
-LOGOUT_REDIRECT_URL = '/employees/logout/'
+LOGOUT_REDIRECT_URL = 'login'
 
 PASSWORD_RESET_TIMEOUT = 3600
 
 ROOT_URLCONF = 'inventory_management_system.urls'
 STATIC_URL = '/static/'
 
-MEDIA_URL = '/profile_pics/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'profile_pics')
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employees', 'static'),
     os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'inventory', 'static'),\
+    os.path.join(BASE_DIR, 'inventory', 'static'),
+    os.path.join(BASE_DIR, 'pos', 'static'),
+    os.path.join(BASE_DIR, 'supplier', 'static'),
 ]
 
 TEMPLATES = [
@@ -145,7 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

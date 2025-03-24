@@ -14,7 +14,6 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     {% block extra_css %}{% endblock %}
-    <script src="{% static 'js/navigation-handler.js' %}"></script>
 </head>
 
 <body>
@@ -60,15 +59,7 @@
                         <a href="#">IG Mobile</a>
                     {% endif %}
                     <span class="separator">/</span>
-                    {% block breadcrumb %}
-                        {% if request.user.employee.role == 'Admin' %}
-                            <a href="{% url 'employee_management' %}">Employee Management</a>
-                            <span class="separator">/</span>
-                            <span class="current">Employee Details</span>
-                        {% else %}
-                            <span class="current">My Profile</span>
-                        {% endif %}
-                    {% endblock %}
+                    {% block breadcrumb %}{% endblock %}
                 </div>
             </div>
 
@@ -81,27 +72,34 @@
                 </div>
 
                 <div class="user-profile" id="profile-menu">
-                    {% if employee.photo %}
-                        <img src="{{ employee.photo.url }}"
+                    {% if request.user.employee.photo %}
+                        <img src="{{ request.user.employee.photo.url }}"
                              alt="Profile"
-                             onerror="this.onerror=null; this.src='{% static 'profile_pics/default-avatar.png' %}'"
+                             onerror="this.onerror=null; this.src='{% static 'default-avatar.svg' %}'"
                              class="profile-avatar">
                     {% else %}
-                        <img src="{% static 'default-avatar.png' %}"
+                        <img src="{% static 'default-avatar.svg' %}"
                              alt="Default Profile"
                              class="profile-avatar">
                     {% endif %}
                     <div class="user-info">
-                        <div class="user-name">{{ employee.full_name }}</div>
-                        <div class="user-role">{{ employee.role }}</div>
+                        <div class="user-name">{{ request.user.employee.full_name }}</div>
+                        <div class="user-role">{{ request.user.employee.role }}</div>
                     </div>
                     <i class="fas fa-chevron-down ml-2"></i>
 
                     <div class="profile-dropdown" id="profile-dropdown">
-                        <a href="{% url 'employee_details' employee.employee_id %}" class="dropdown-item">
-                            <i class="fas fa-user"></i>
-                            <span>My Profile</span>
-                        </a>
+                        {% if request.user.employee.employee_id %}
+                            <a href="{% url 'employee_details' request.user.employee.employee_id %}" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>My Profile</span>
+                            </a>
+                        {% else %}
+                            <a href="#" class="dropdown-item disabled">
+                                <i class="fas fa-user"></i>
+                                <span>My Profile</span>
+                            </a>
+                        {% endif %}
                         <div class="dropdown-divider"></div>
                         <a href="{% url 'logout' %}" class="dropdown-item">
                             <i class="fas fa-sign-out-alt"></i>
@@ -153,6 +151,29 @@
             </div>
         </footer>
     </div>
+</div>
+<!-- Toast notification container -->
+<div id="toast-container" class="toast-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast toast-{{ message.tags }}" role="alert">
+                <div class="toast-header">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                    <strong class="toast-title">{{ message.tags|title }}</strong>
+                </div>
+                <div class="toast-body">{{ message }}</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+        {% endfor %}
+    {% endif %}
 </div>
 
 <!-- JavaScript Libraries -->
