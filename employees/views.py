@@ -3,9 +3,7 @@ import time
 import random
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.utils.cache import add_never_cache_headers
 from django.utils.timezone import now, timedelta
 from django.core.files.storage import default_storage
 from django.shortcuts import render, redirect
@@ -19,7 +17,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Q
-from django.db.models import Sum
+from django.db.models import Sum , ExpressionWrapper, DecimalField, F
 from employees.models import Employee
 from inventory.models import Product, ProductCategory
 from pos.models import Sale, SaleItem
@@ -299,9 +297,8 @@ def forgot_password_view(request):
 
             try:
                 user = User.objects.get(email=email)
-                employee = Employee.objects.get(user=user)  # Get Employee profile
+                employee = Employee.objects.get(user=user)
 
-                # Check if a reset request was made within the last hour
                 if employee.last_password_reset and (now() - employee.last_password_reset) < timedelta(hours=1):
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                     token = default_token_generator.make_token(user)
@@ -312,11 +309,9 @@ def forgot_password_view(request):
                     token = default_token_generator.make_token(user)
                     reset_link = request.build_absolute_uri(reverse("reset_password", args=[uid, token]))
 
-                    # Update last password reset timestamp
                     employee.last_password_reset = now()
                     employee.save()
 
-                # Send reset email
                 send_mail(
                     "Password Reset Request",
                     f"Click the link to reset your password: {reset_link}",
@@ -335,7 +330,7 @@ def forgot_password_view(request):
     else:
         forgot_password_form = ForgotPassword()
 
-    return render(request, 'forgot_password.html', {'form': forgot_password_form})
+    return render(request, 'forgot_password.html', {'forgot_password_form': forgot_password_form})
 
 
 def reset_password_view(request, uidb64, token):
@@ -354,7 +349,7 @@ def reset_password_view(request, uidb64, token):
     if request.method == "POST":
         form = ResetPasswordForm(request.POST)
         if form.is_valid():
-            user.set_password(form.cleaned_data["password"])  # ✅ Secure password hashing
+            user.set_password(form.cleaned_data["password"])
             user.save()
             messages.success(request, "Password reset successful! Please log in.")
             return redirect("login")
@@ -516,17 +511,23 @@ def get_category_sales_data(start_date, end_date):
 
     sales_by_category = []
     for category in categories:
+        # Calculate total by multiplying quantity and selling_price
         total = SaleItem.objects.filter(
             sale_id__sale_date__date__range=[start_date, end_date],
             product_id__category_id=category
-        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        ).annotate(
+            item_total=ExpressionWrapper(
+                F('quantity') * F('selling_price'),
+                output_field=DecimalField()
+            )
+        ).aggregate(total=Sum('item_total'))['total'] or 0
 
         sales_by_category.append({
             'category': category.category_name,
             'total': float(total)
         })
-    sales_by_category.sort(key=lambda x: x['total'], reverse=True)
 
+    sales_by_category.sort(key=lambda x: x['total'], reverse=True)
     labels = [item['category'] for item in sales_by_category]
     data = [item['total'] for item in sales_by_category]
 

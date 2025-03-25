@@ -112,7 +112,6 @@ class ResetPasswordForm(SignupForm):
         fields = ["password", "confirm_password"]
 
     def __init__(self, *args, **kwargs):
-        """Remove unnecessary fields from SignupForm."""
         super().__init__(*args, **kwargs)
         for field in ["email", "phone", "full_name", "address", "photo"]:
             self.fields.pop(field, None)

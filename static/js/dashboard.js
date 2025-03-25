@@ -84,36 +84,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 });
-// Toast Notification Handling
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-remove toasts after 5 seconds
-    const toasts = document.querySelectorAll('.toast');
-
-    toasts.forEach(toast => {
-        setTimeout(() => {
-            if (toast && toast.parentNode) {
-                toast.classList.add('toast-hiding');
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 500);
-            }
-        }, 5000);
-    });
-
-    // Allow manual close of toasts
-    document.querySelectorAll('.toast-close').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const toast = this.closest('.toast');
-            if (toast) {
-                toast.classList.add('toast-hiding');
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }
-        });
-    });
-});
+// // Toast Notification Handling
+// document.addEventListener('DOMContentLoaded', function() {
+//     // Auto-remove toasts after 5 seconds
+//     const toasts = document.querySelectorAll('.toast');
+//
+//     toasts.forEach(toast => {
+//         setTimeout(() => {
+//             if (toast && toast.parentNode) {
+//                 toast.classList.add('toast-hiding');
+//                 setTimeout(() => {
+//                     if (toast.parentNode) {
+//                         toast.parentNode.removeChild(toast);
+//                     }
+//                 }, 500);
+//             }
+//         }, 5000);
+//     });
+//
+//     // Allow manual close of toasts
+//     document.querySelectorAll('.toast-close').forEach(btn => {
+//         btn.addEventListener('click', function() {
+//             const toast = this.closest('.toast');
+//             if (toast) {
+//                 toast.classList.add('toast-hiding');
+//                 setTimeout(() => {
+//                     if (toast.parentNode) {
+//                         toast.parentNode.removeChild(toast);
+//                     }
+//                 }, 300);
+//             }
+//         });
+//     });
+// });

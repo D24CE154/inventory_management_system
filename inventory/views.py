@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
-from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper, F
+from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper, Q
 import json
+from .forms import CategoryForm
 from datetime import datetime,timedelta
 from employees.models import Employee,AuditLog
 from pos.models import Sale, SaleItem, Customer
@@ -69,3 +70,80 @@ def inventoryManagerDashboard(request):
     }
 
     return render(request,'InventoryManagerDashboard.html',context)
+
+@login_required(login_url='login')
+def category_list(request):
+    categories = ProductCategory.objects.annotate(
+        product_count=Count('product', distinct=True),
+        stock_value=Sum('product__productitems__price', distinct=True,
+                        filter=Q(product__productitems__status='Available'))
+    ).order_by('category_name')
+
+    context = {
+        'categories': categories,
+        'logged_in_employee': request.user.employee
+    }
+    return render(request, 'category_list.html', context)
+
+@login_required(login_url='login')
+def add_category(request):
+    if not (request.user.employee.role == 'Admin' or request.user.employee.role == 'Inventory Manager'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f"Category {category.category_name} added successfully.")
+            return redirect("category_list")
+    else:
+        form = CategoryForm()
+
+    context = {
+        'form': form,
+        'logged_in_employee': request.user.employee
+    }
+    return render(request, 'add_category.html', context)
+
+@login_required(login_url='login')
+def edit_category(request, category_id):
+    if not is_active_inventory_manager(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
+    category = get_object_or_404(ProductCategory, category_id=category_id)
+
+    if request.method == 'POST':
+        editCategoryForm = CategoryForm(request.POST, instance=category)
+        if editCategoryForm.is_valid():
+            category = editCategoryForm.save()
+            messages.success(request, f"Category {category.category_name} updated successfully.")
+            return redirect("category_list")
+    else:
+        editCategoryForm = CategoryForm(instance=category)
+
+    context = {
+        'form': editCategoryForm,
+        'logged_in_employee': request.user.employee,
+        'category': category
+    }
+    return render(request, 'edit_category.html', context)
+
+@login_required(login_url='login')
+def delete_category(request,category_id):
+
+    if not is_active_inventory_manager(request.user):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect("error_403_view")
+
+    category = get_object_or_404(ProductCategory, category_id = category_id)
+
+    if Product.objects.filter(category_id=category_id).exists():
+        messages.error(request, f"Cannot delete '{category.category_name}' as it has associated products.")
+        return redirect('category_list')
+
+    category_name = category.category_name
+    category.delete()
+    messages.success(request,f"Category {category_name} deleted successfully.")
+    return redirect('category_list')

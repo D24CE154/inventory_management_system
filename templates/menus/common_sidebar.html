@@ -44,7 +44,7 @@
             <i class="fas fa-box"></i>
             <span>Products</span>
         </a>
-        <a href="#" class="menu-item {% if active_page == 'categories' %}active{% endif %}">
+        <a href="{% url 'category_list' %}" class="menu-item {% if active_page == 'categories' %}active{% endif %}">
             <i class="fas fa-tags"></i>
             <span>Categories</span>
         </a>

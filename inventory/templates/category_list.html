@@ -1,0 +1,196 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Product Categories | IG Mobile{% endblock %}
+
+{% block breadcrumb %}
+    {% if logged_in_employee.role == 'Admin' %}
+        <a href="{% url 'adminDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Inventory Manager' %}
+        <a href="{% url 'inventoryManagerDashboard' %}">Dashboard</a>
+    {% elif logged_in_employee.role == 'Sales Executive' %}
+        <a href="{% url 'salesExecutiveDashboard' %}">Dashboard</a>
+    {% else %}
+        <a href="#">Dashboard</a>
+    {% endif %}
+    <span class="separator">/</span>
+    <span class="current">Categories</span>
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='categories' %}
+{% endblock %}
+
+{% block page_title %}Product Categories{% endblock %}
+{% block page_description %}Manage your fixed product categories{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>Product Categories</h2>
+                {% if logged_in_employee.role == 'Admin' or logged_in_employee.role == 'Inventory Manager' %}
+                    <a href="{% url 'add_category' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Category
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body" style="padding-top: 2rem;">
+            {% if categories %}
+                <div class="category-grid">
+                    {% for category in categories %}
+                        <div class="category-card">
+                            <div class="category-icon">
+                                {% if category.category_name|lower == 'mobile phones' %}
+                                    <i class="fas fa-mobile-alt"></i>
+                                {% elif category.category_name|lower == 'audio' %}
+                                    <i class="fas fa-headphones"></i>
+                                {% elif category.category_name|lower == 'accessories' %}
+                                    <i class="fas fa-plug"></i>
+                                {% elif category.category_name|lower == 'tablet' %}
+                                    <i class="fas fa-tablet-alt"></i>
+                                {% else %}
+                                    <i class="fas fa-box"></i>
+                                {% endif %}
+                            </div>
+                            <div class="category-info">
+                                <h3>{{ category.category_name }}</h3>
+                                <div class="category-stats">
+                                    <div class="stat">
+                                        <span class="stat-value">{{ category.product_count }}</span>
+                                        <span class="stat-label">Products</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-value">{{ category.stock_value|default:"0.00" }}</span>
+                                        <span class="stat-label">Stock Value</span>
+                                    </div>
+                                </div>
+                                <div class="category-actions">
+                                    <a href="#" class="btn btn-sm btn-primary">View Products</a>
+                                    {% if request.user.employee.role == 'Admin' or request.user.employee.role == 'Inventory Manager' %}
+                                        <div class="admin-actions">
+                                            <a href="{% url 'edit_category' category.category_id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button onclick="confirmDeleteCategory({{ category.category_id }}, '{{ category.category_name }}')" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
+                    <h4>No Categories Found</h4>
+                    <p class="text-muted">Start by adding the standard categories: Mobile phones, Audio, Accessories, Tablet</p>
+                    {% if request.user.employee.role == 'Admin' or request.user.employee.role == 'Inventory Manager' %}
+                        <a href="{% url 'add_category' %}" class="btn btn-primary mt-3">
+                            Add First Category
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem; /* Added additional margin to the grid */
+        }
+
+        .category-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-icon {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .category-info {
+            padding: 1.5rem;
+        }
+
+        .category-info h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .category-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .category-actions {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDeleteCategory(id, name) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: `Delete category ${name}? This action cannot be undone.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/inventory/categories/delete_category/${id}/`;
+                }
+            });
+        }
+    </script>
+{% endblock %}

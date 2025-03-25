@@ -152,29 +152,6 @@
         </footer>
     </div>
 </div>
-<!-- Toast notification container -->
-<div id="toast-container" class="toast-container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="toast toast-{{ message.tags }}" role="alert">
-                <div class="toast-header">
-                    {% if message.tags == 'success' %}
-                        <i class="fas fa-check-circle"></i>
-                    {% elif message.tags == 'error' %}
-                        <i class="fas fa-exclamation-circle"></i>
-                    {% elif message.tags == 'warning' %}
-                        <i class="fas fa-exclamation-triangle"></i>
-                    {% else %}
-                        <i class="fas fa-info-circle"></i>
-                    {% endif %}
-                    <strong class="toast-title">{{ message.tags|title }}</strong>
-                </div>
-                <div class="toast-body">{{ message }}</div>
-                <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
 
 <!-- JavaScript Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
