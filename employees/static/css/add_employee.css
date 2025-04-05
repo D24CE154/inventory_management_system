@@ -123,3 +123,41 @@ textarea {
     width: 100%;
     padding-right: 2.5rem; /* Ensures space for the eye icon */
 }
+/* Form Actions - Updated */
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;  /* This replaces mt-6 */
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Add proper spacing between buttons */
+.form-actions .btn + .btn,
+.form-actions .btn + a.btn {
+    margin-left: 0.5rem;  /* This replaces ml-2 */
+}
+
+/* Ensure proper button sizing and alignment */
+.form-actions .btn {
+    min-width: 120px;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+        margin-left: 0 !important;  /* Remove horizontal margins on mobile */
+        margin-top: 0.5rem;
+    }
+
+    .form-actions button:first-child,
+    .form-actions a:first-child {
+        margin-top: 0;
+    }
+}

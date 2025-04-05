@@ -1,8 +1,10 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
+
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
 {% endblock %}
+
 {% block title %}Add Employee | IG Mobile{% endblock %}
 
 {% block breadcrumb %}
@@ -55,6 +57,7 @@
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- First column -->
                     <div>
                         <div class="form-group">
                             <label for="id_full_name" class="form-label">Full Name</label>
@@ -84,7 +87,6 @@
 
                         <div class="form-group">
                             <label for="id_password" class="form-label">Password</label>
-                            {#                            <div class="relative">#}
                             <div class="password-field">
                                 {{ form.password }}
                                 <button type="button" class="password-toggle" onclick="togglePassword('id_password')">
@@ -92,65 +94,61 @@
                                 </button>
                             </div>
                             <span class="form-help">{{ form.password.help_text }}</span>
+                            {% if form.password.errors %}
+                                <span class="form-error">{{ form.password.errors.0 }}</span>
+                            {% endif %}
                         </div>
-                        {% if form.password.errors %}
-                            <span class="form-error">{{ form.password.errors.0 }}</span>
-                        {% endif %}
-                    </div>
 
-                    <div class="form-group">
-                        <label for="id_confirm_password" class="form-label">Confirm Password</label>
-                        {#                            <div class="relative">#}
-                        <div class="password-field">
-                            {{ form.confirm_password }}
+                        <div class="form-group">
+                            <label for="id_confirm_password" class="form-label">Confirm Password</label>
+                            <div class="password-field">
+                                {{ form.confirm_password }}
+                                <button type="button" class="password-toggle" onclick="togglePassword('id_confirm_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                             <span class="form-help">{{ form.confirm_password.help_text }}</span>
-                            <button type="button" class="password-toggle"
-                                    onclick="togglePassword('id_confirm_password')">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            {% if form.confirm_password.errors %}
+                                <span class="form-error">{{ form.confirm_password.errors.0 }}</span>
+                            {% endif %}
                         </div>
                     </div>
-                    {% if form.confirm_password.errors %}
-                        <span class="form-error">{{ form.confirm_password.errors.0 }}</span>
-                    {% endif %}
+
+                    <!-- Second column -->
+                    <div>
+                        <div class="form-group">
+                            <label for="id_phone" class="form-label">Phone</label>
+                            {{ form.phone }}
+                            <span class="form-help">{{ form.phone.help_text }}</span>
+                            {% if form.phone.errors %}
+                                <span class="form-error">{{ form.phone.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_address" class="form-label">Address</label>
+                            {{ form.address }}
+                            <span class="form-help">{{ form.address.help_text }}</span>
+                            {% if form.address.errors %}
+                                <span class="form-error">{{ form.address.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_photo" class="form-label">Profile Photo</label>
+                            {{ form.photo }}<br>
+                            <span class="form-help">{{ form.photo.help_text }}</span>
+                            {% if form.photo.errors %}
+                                <span class="form-error">{{ form.photo.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <div class="form-group">
-                    <label for="id_phone" class="form-label">Phone</label>
-                    {{ form.phone }}
-                    <span class="form-help">{{ form.phone.help_text }}</span>
-                    {% if form.phone.errors %}
-                        <span class="form-error">{{ form.phone.errors.0 }}</span>
-                    {% endif %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Employee</button>
+                    <a href="{% url 'employee_management' %}" class="btn btn-outline">Cancel</a>
                 </div>
-
-                <div class="form-group">
-                    <label for="id_address" class="form-label">Address</label>
-                    {{ form.address }}
-                    <span class="form-help">{{ form.address.help_text }}</span>
-                    {% if form.address.errors %}
-                        <span class="form-error">{{ form.address.errors.0 }}</span>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="id_photo" class="form-label">Profile Photo</label>
-                    {{ form.photo }}<br>
-
-                    <span class="form-help">{{ form.photo.help_text }}</span>
-                    {% if form.photo.errors %}
-                        <span class="form-error">{{ form.photo.errors.0 }}</span>
-                    {% endif %}
-                </div>
-            </div>
-            </div>
-
-            <div class="form-actions mt-6">
-                <button type="submit" class="btn btn-primary">Add Employee</button>
-                <a href="{% url 'employee_management' %}" class="btn btn-outline ml-2">Cancel</a>
-            </div>
             </form>
         {% endif %}
     </div>
