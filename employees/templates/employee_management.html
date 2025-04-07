@@ -40,6 +40,7 @@
                 <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Photo</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Phone</th>
@@ -52,6 +53,9 @@
                 {% for employee in employees %}
                     <tr>
                         <td>{{ employee.employee_id }}</td>
+                        <td>
+                            <img src="{{ employee.photo.url }}" alt="Photo" height="60" width="60" style="border-radius: 50%;">
+                        </td>
                         <td>{{ employee.full_name }}</td>
                         <td>{{ employee.user.email }}</td>
                         <td>{{ employee.phone }}</td>
@@ -79,7 +83,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-gray-500">No employees found</td>
+                        <td colspan="8" class="text-center text-gray-500">No employees found</td>
                     </tr>
                 {% endfor %}
                 </tbody>

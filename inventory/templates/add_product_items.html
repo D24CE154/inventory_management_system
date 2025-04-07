@@ -1,0 +1,73 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Add Product Items{% endblock %}
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='products' %}
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/products.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'product_list' %}">Product Management</a>
+    <span class="separator">/</span>
+    <span class="current">Add Product Items</span>
+{% endblock %}
+
+{% block page_title %}Add Product Items{% endblock %}
+{% block page_description %}Add product items for {{ product_name }}{% endblock %}
+
+{% block content %}
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Add Product Items for {{ product_name }}</h3>
+        </div>
+        <div class="p-4">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    <div class="form-entry">
+                        <div class="form-title">Product Item {{ forloop.counter }}</div>
+                        {{ form.as_p }}
+                        <hr class="form-divider">
+                    </div>
+                {% endfor %}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" onclick="confirmCancel()" class="btn btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmCancel() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "If you cancel now, the product will be deleted.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, cancel and delete',
+                cancelButtonText: 'No, continue editing'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit the form with cancel parameter
+                    let form = document.querySelector('form');
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'cancel';
+                    input.value = 'true';
+                    form.appendChild(input);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+{% endblock %}

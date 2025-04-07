@@ -1,6 +1,6 @@
 #SUpplier model
 from django.db import models
-from inventory.models import NonSerializedProducts
+from inventory.models import ProductItems
 
 
 # Create your models here.
@@ -27,7 +27,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderItem(models.Model):
     purchase_item_id = models.AutoField(primary_key=True)
     purchase_order_id = models.ForeignKey(PurchaseOrder, null=False, on_delete=models.CASCADE)
-    product_id = models.ForeignKey(NonSerializedProducts,null=False,on_delete=models.CASCADE)
+    product_id = models.ForeignKey(ProductItems,null=False,on_delete=models.CASCADE)
     quantity = models.IntegerField(null=False)
     unit_cost = models.DecimalField(max_digits=10,decimal_places=2,null=False)
 

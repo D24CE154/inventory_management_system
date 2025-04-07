@@ -1,0 +1,97 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Brand Management | IG Mobile{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/brands.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+    <span class="current">Brand Management</span>
+{% endblock %}
+
+{% block page_title %}Brand Management{% endblock %}
+{% block page_description %}Manage all brands{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='categories' %}
+{% endblock %}}
+
+{% block content %}
+    <div class="mb-4 flex justify-between items-center">
+        <form method="GET" action="{% url 'brand_list' %}" class="flex items-center">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search brands..." class="form-input">
+            <button type="submit" class="btn btn-outline" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        <a href="{% url 'add_brand' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i> Add Brand
+        </a>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Brand List</h3>
+        </div>
+        <div class="p-0">
+            <table class="data-table w-full">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Brand Name</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for brand in brands %}
+                    <tr>
+                        <td>{{ brand.brand_id }}</td>
+                        <td>{{ brand.brand_name }}</td>
+                        <td>
+                            {% for category in brand.categories.all %}
+                                {{ category.category_name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <a href="{% url 'edit_brand' brand.brand_id %}" class="btn-icon btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="confirmDeleteBrand('{{ brand.brand_id }}', '{{ brand.brand_name }}')" class="btn-icon btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-gray-500">No brands found</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDeleteBrand(id, name) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You won't be able to revert this!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `{% url 'delete_brand' 0 %}`.replace('0', id);
+                }
+            });
+        }
+    </script>
+{% endblock %}

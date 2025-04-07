@@ -40,13 +40,17 @@
 {% if employee.role == 'Admin' or employee.role == 'Inventory Manager' %}
     <div class="menu-section">
         <h3 class="menu-label">Inventory</h3>
-        <a href="#" class="menu-item {% if active_page == 'product_management' %}active{% endif %}">
+        <a href='{% url 'product_list' %}' class="menu-item {% if active_page == 'product_management' %}active{% endif %}">
             <i class="fas fa-box"></i>
             <span>Products</span>
         </a>
         <a href="{% url 'category_list' %}" class="menu-item {% if active_page == 'categories' %}active{% endif %}">
             <i class="fas fa-tags"></i>
             <span>Categories</span>
+        </a>
+        <a href="{% url 'brand_list' %}" class="menu-item {% if active_page == 'brands' %}active{% endif %}">
+            <i class="fas fa-industry"></i>
+            <span>Brands</span>
         </a>
         <a href='{%url "suppliers" %}' class="menu-item {% if active_page == 'suppliers' %}active{% endif %}">
             <i class="fas fa-truck"></i>
@@ -67,7 +71,7 @@
 {% if employee.role == 'Admin' or employee.role == 'Sales Executive' %}
     <div class="menu-section">
         <h3 class="menu-label">Sales</h3>
-        <a href="#" class="menu-item {% if active_page == 'new_sale' %}active{% endif %}">
+        <a href="{% url 'create_sale' %}"class="menu-item {% if active_page == 'new_sale' %}active{% endif %}">
             <i class="fas fa-cash-register"></i>
             <span>New Sale</span>
         </a>

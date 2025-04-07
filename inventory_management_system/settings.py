@@ -68,6 +68,9 @@ LOGIN_URL = ''
 LOGIN_REDIRECT_URL = "/employees/redirect-based-on-role/"
 LOGOUT_REDIRECT_URL = 'login'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 PASSWORD_RESET_TIMEOUT = 3600
 
 ROOT_URLCONF = 'inventory_management_system.urls'
@@ -168,3 +171,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'samarchauhan2729@gmail.com'
 EMAIL_HOST_PASSWORD = 'uskq zity frie dsgz'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+RAZORPAY_KEY_ID = 'rzp_test_7yJ6eOqPq6PqTJ'
+RAZORPAY_KEY_SECRET = 'A2hB1WqF5TL1uFlFKeYiyNb0'

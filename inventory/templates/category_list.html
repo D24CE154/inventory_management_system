@@ -67,7 +67,7 @@
                                     </div>
                                 </div>
                                 <div class="category-actions">
-                                    <a href="#" class="btn btn-sm btn-primary">View Products</a>
+                                    <a href="{% url 'category_products' category.category_id %}" class="btn btn-sm btn-primary">View Products</a>
                                     {% if request.user.employee.role == 'Admin' or request.user.employee.role == 'Inventory Manager' %}
                                         <div class="admin-actions">
                                             <a href="{% url 'edit_category' category.category_id %}" class="btn btn-sm btn-outline-primary">
