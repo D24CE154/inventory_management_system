@@ -7,7 +7,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from .models import ProductCategory, Brand, Product, ProductItem
-from .forms import ProductForm, ProductItemForm, CategoryForm, BrandForm
+from .forms import ProductForm, ProductItemForm, CategoryForm, BrandForm, CATEGORY_SPEC_FIELDS
 import json
 
 def is_active_inventory_manager(user):
@@ -166,31 +166,24 @@ def product_stock(request, pk):
 @login_required
 def stock_add(request, product_pk):
     product = get_object_or_404(Product, pk=product_pk)
-    category_brands = {
-        'Mobile': list(Brand.objects.filter(categories__name='Mobile').values('id', 'name')),
-        'Audio': list(Brand.objects.filter(categories__name='Audio').values('id', 'name')),
-        'Accessories': list(Brand.objects.filter(categories__name='Accessories').values('id', 'name')),
-    }
+    category = product.category.name  # Get the category name
 
     if request.method == 'POST':
-        form = ProductItemForm(request.POST, request.FILES)
+        form = ProductItemForm(request.POST, request.FILES, category=category)
         if form.is_valid():
             stock_item = form.save(commit=False)
             stock_item.product = product
-            stock_item.specifications = json.dumps(request.POST.get('specifications', {}))
-            if 'image' in request.FILES:
-                filename = f"{form.cleaned_data.get('serial_number') or product.name}.jpg"
-                stock_item.image.save(f"product_images/{filename}", request.FILES['image'])
+            if category != "Accessories":
+                stock_item.quantity = 1  # Ensure quantity is 1 for serialized products
             stock_item.save()
             messages.success(request, 'Stock item added successfully.')
             return redirect('product_stock', pk=product.pk)
     else:
-        form = ProductItemForm()
+        form = ProductItemForm(category=category)
 
     return render(request, 'stock_item_form.html', {
         'form': form,
         'product': product,
-        'category_brands': json.dumps(category_brands),
         'logged_in_employee': request.user.employee
     })
 
@@ -198,18 +191,23 @@ def stock_add(request, product_pk):
 @login_required
 def stock_edit(request, pk):
     stock_item = get_object_or_404(ProductItem, pk=pk)
+    category = stock_item.product.category.name  # Get the category name
+
     if request.method == 'POST':
-        form = ProductItemForm(request.POST, request.FILES, instance=stock_item)
+        form = ProductItemForm(request.POST, request.FILES, instance=stock_item, category=category)
         if form.is_valid():
             stock_item = form.save(commit=False)
-            stock_item.specifications = json.dumps(request.POST.get('specifications', {}))
             stock_item.save()
             messages.success(request, 'Stock item updated successfully.')
             return redirect('product_stock', pk=stock_item.product.pk)
     else:
-        form = ProductItemForm(instance=stock_item)
-    return render(request, 'stock_item_form.html', {'form': form, 'product': stock_item.product, 'logged_in_employee': request.user.employee})
+        form = ProductItemForm(instance=stock_item, category=category)
 
+    return render(request, 'stock_item_form.html', {
+        'form': form,
+        'product': stock_item.product,
+        'logged_in_employee': request.user.employee
+    })
 @login_required
 def stock_delete(request, pk):
     stock_item = get_object_or_404(ProductItem, pk=pk)

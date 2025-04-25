@@ -1,47 +1,36 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
 
-{% block breadcrumb %}
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'adminDashboard' %}" {% if logged_in_employee.role != 'Admin' %}style="display: none;"{% endif %}>Admin Dashboard</a>
-                <a href="{% url 'inventoryManagerDashboard' %}" {% if logged_in_employee.role == 'Admin' %}style="display: none;"{% endif %}>Inventory Manager Dashboard</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Add/Edit Stock Item</li>
-        </ol>
-    </nav>
-{% endblock %}
+{% block page_title %}Add Stock{% endblock %}
 
-{% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='stock_item_form' %}
+{% block breadcrumb %}
+    <a href="{% url 'product_list' %}">Products</a>
+    <span class="separator">/</span>
+    <a href="{% url 'product_stock' product.pk %}">Stock for {{ product.name }}</a>
+    <span class="separator">/</span>
+    <span class="current">Add Stock</span>
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
+    <link rel="stylesheet" href="{% static 'css/stock_form.css' %}">
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='product_stock' %}
 {% endblock %}
 
 {% block content %}
     <div class="form-card">
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="id_category">Category</label>
-                {{ form.category }}
+            <fieldset>
+                <legend>Add Stock Item</legend>
+                {{ form.as_p }}
+            </fieldset>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'product_stock' product.pk %}" class="btn btn-secondary">Cancel</a>
             </div>
-            <div class="form-group">
-                <label for="id_brand">Brand</label>
-                {{ form.brand }}
-            </div>
-            <div id="specifications-container" class="form-group" style="display: none;">
-                <label>Specifications</label>
-                <div id="dynamic-specifications"></div>
-            </div>
-            <div class="form-group">
-                <label for="id_image">Image</label>
-                {{ form.image }}
-            </div>
-            <button type="submit" class="btn btn-success">Save</button>
         </form>
     </div>
 {% endblock %}

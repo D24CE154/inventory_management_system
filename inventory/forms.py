@@ -2,10 +2,11 @@ from django.forms import ModelForm
 from .models import Product, ProductItem, ProductCategory, Brand
 from django import forms
 
+
 CATEGORY_SPEC_FIELDS = {
-    'Mobile': ['RAM', 'Storage', 'Processor', 'Display Size'],
-    'Audio': ['Driver size', 'Wired/Wireless'],
-    'Accessories': ['Color', 'Phone Compatibility']
+    'Mobile': ['RAM', 'Space', 'Processor'],
+    'Audio': ['Wired/Wireless', 'Driver Size'],
+    'Accessories': ['Color', 'Compatibility']
 }
 
 class ProductForm(ModelForm):
@@ -29,39 +30,36 @@ class ProductForm(ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
         }
 
-class ProductItemForm(ModelForm):
-    category = forms.ChoiceField(
-        choices=[(key, key) for key in CATEGORY_SPEC_FIELDS.keys()],
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'category-select'})
-    )
-    brand = forms.ModelChoiceField(
-        queryset=Brand.objects.none(),
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'brand-select', 'disabled': 'true'})
-    )
-    specifications = forms.JSONField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'id': 'specifications-field', 'disabled': 'true'}),
-        required=False
-    )
-
+class ProductItemForm(forms.ModelForm):
     class Meta:
         model = ProductItem
-        fields = [
-            'serial_number', 'item_type', 'quantity', 'cost_price', 'sale_price', 'image', 'specifications'
-        ]
-        widgets = {
-            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'item_type': forms.Select(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': '1'}),
-            'cost_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'sale_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-        }
+        fields = ['serial_number', 'quantity', 'cost_price', 'sale_price', 'image']
 
     def __init__(self, *args, **kwargs):
+        category = kwargs.pop('category', None)  # Get the category from kwargs
         super().__init__(*args, **kwargs)
-        self.fields['brand'].widget.attrs.update({'disabled': 'true'})
+
+        # Dynamically add category-specific fields
+        if category in CATEGORY_SPEC_FIELDS:
+            for field in CATEGORY_SPEC_FIELDS[category]:
+                self.fields[field] = forms.CharField(
+                    required=True,
+                    widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': field})
+                )
+
+        # Handle item_type and quantity fields based on category
+        if category == "Accessories":
+            self.fields['item_type'] = forms.CharField(
+                initial=ProductItem.NON_SERIAL,
+                widget=forms.HiddenInput()
+            )
+        else:
+            self.fields['item_type'] = forms.CharField(
+                initial=ProductItem.SERIALIZED,
+                widget=forms.HiddenInput()
+            )
+            self.fields['quantity'].widget = forms.HiddenInput()
+            self.fields['quantity'].initial = 1
 
 class CategoryForm(forms.ModelForm):
     class Meta:

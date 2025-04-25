@@ -38,7 +38,7 @@
             {% for item in stock_items %}
                 <tr>
                     <td><img src="{{ item.image.url }}" alt="Stock Image" width="50"></td>
-                    <td>{{ item.serial_number|default:"Bulk ×" ~ item.quantity }}</td>
+                    <td>{{ item.serial_number|default:"Bulk ×" }}{{ item.quantity }}</td>
                     <td>{{ item.item_type }}</td>
                     <td>{{ item.cost_price }}</td>
                     <td>{{ item.sale_price }}</td>
