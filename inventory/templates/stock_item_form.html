@@ -1,0 +1,47 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'adminDashboard' %}" {% if logged_in_employee.role != 'Admin' %}style="display: none;"{% endif %}>Admin Dashboard</a>
+                <a href="{% url 'inventoryManagerDashboard' %}" {% if logged_in_employee.role == 'Admin' %}style="display: none;"{% endif %}>Inventory Manager Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Add/Edit Stock Item</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='stock_item_form' %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_category">Category</label>
+                {{ form.category }}
+            </div>
+            <div class="form-group">
+                <label for="id_brand">Brand</label>
+                {{ form.brand }}
+            </div>
+            <div id="specifications-container" class="form-group" style="display: none;">
+                <label>Specifications</label>
+                <div id="dynamic-specifications"></div>
+            </div>
+            <div class="form-group">
+                <label for="id_image">Image</label>
+                {{ form.image }}
+            </div>
+            <button type="submit" class="btn btn-success">Save</button>
+        </form>
+    </div>
+{% endblock %}

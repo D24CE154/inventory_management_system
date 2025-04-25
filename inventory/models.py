@@ -1,49 +1,42 @@
 # Inventory models
 
 from django.db import models
+from django.db.models import Sum
+
 
 class ProductCategory(models.Model):
-    category_id = models.AutoField(primary_key=True)
-    category_name = models.CharField(max_length=255,null=False,blank=False)
+    name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return self.category_name
+        return self.name
 
 class Brand(models.Model):
-    brand_id = models.AutoField(primary_key=True)
-    brand_name = models.CharField(max_length=255, unique=True, null=False, blank=False)
+    name = models.CharField(max_length=255, unique=True)
     categories = models.ManyToManyField(ProductCategory, related_name="brands")
 
     def __str__(self):
-        return f"{self.brand_name}"
+        return self.name
 
 class Product(models.Model):
-    product_id = models.AutoField(primary_key=True)
-    product_name = models.CharField(max_length=255, null=False, blank=False)
-    category_id = models.ForeignKey(ProductCategory, null=False, on_delete=models.CASCADE)
-    brand = models.ForeignKey(Brand, null=True, on_delete=models.CASCADE)
-    stock = models.IntegerField(null=False, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+    name     = models.CharField(max_length=255)
+    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)
 
-    def delete(self, *args, **kwargs):
-        self.productitems_set.all().delete()
-        super().delete(*args, **kwargs)
+    @property
+    def total_stock(self):
+        return self.items.aggregate(total=Sum('quantity'))['total'] or 0
 
-class ProductItems(models.Model):
-    PRODUCT_TYPE_CHOICES = [
-        ('Serialized', 'Serialized'),
-        ('NonSerialized', 'NonSerialized'),
-    ]
 
-    product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
-    product_type = models.CharField(max_length=15, choices=PRODUCT_TYPE_CHOICES, default='Serialized')
-    serial_number = models.CharField(max_length=255, null=True, blank=True, unique=True)
-    specifications = models.JSONField(default=dict)  # Category-specific specs
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=False, default=0)
-    STATUS_CHOICES = [
-        ('Available', 'Available'),
-        ('Sold', 'Sold'),
-    ]
-    status = models.CharField(choices=STATUS_CHOICES, max_length=10, default='Available')
-    image = models.ImageField(upload_to='product_images/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class ProductItem(models.Model):
+    SERIALIZED = "Serialized"
+    NON_SERIAL = "NonSerialized"
+    ITEM_TYPE  = [(SERIALIZED, "Serialized"), (NON_SERIAL, "Non‑Serialized")]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
+    item_type = models.CharField(max_length=15, choices=ITEM_TYPE)
+    serial_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to="product_images/", null=True, blank=True)
+    specifications = models.JSONField(default=dict, blank=True)

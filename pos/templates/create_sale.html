@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='create_sale' %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee employee=logged_in_employee active_page='create_sale' %}
 {% endblock %}
 
 {% block content %}
@@ -20,33 +20,20 @@
         <h2>Create Sale</h2>
         <form method="post">
             {% csrf_token %}
-            <div class="form-group">
-                {{ sale_form.as_p }}
-            </div>
-            <div class="form-group">
-                {{ formset.management_form }}
-                {% for form in formset %}
-                    <div class="form-group">
-                        {{ form.product_id.label_tag }} {{ form.product_id }}
-                    </div>
-                    <div class="form-group">
-                        {{ form.quantity.label_tag }} {{ form.quantity }}
-                    </div>
-                    <div class="form-group">
-                        {{ form.product_category.label_tag }} {{ form.product_category }}
-                    </div>
-                    <div class="form-group imei-field" style="display: none;">
-                        {{ form.imei.label_tag }} {{ form.imei }}
-                    </div>
-                    <div class="form-group">
-                        {{ form.check_availability.label_tag }} {{ form.check_availability }}
-                        <span class="stock-availability"></span>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Submit">
-            </div>
+            {{ sale_form.as_p }}
+            {{ formset.management_form }}
+
+            {% for form in formset %}
+                <fieldset class="form-group">
+                    <legend>Product {{ forloop.counter }}</legend>
+                    {{ form.product_id.label_tag }} {{ form.product_id }}
+                    {{ form.quantity.label_tag }} {{ form.quantity }}
+                    {{ form.product_category.label_tag }} {{ form.product_category }}
+                    {{ form.imei.label_tag }} {{ form.imei }}
+                </fieldset>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary">Submit Sale</button>
         </form>
     </div>
 {% endblock %}

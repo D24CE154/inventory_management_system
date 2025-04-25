@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 from employees.models import Employee
-from inventory.models import Product, ProductItems
+from inventory.models import Product, ProductItem
 
 
 class Customer(models.Model):
@@ -32,6 +32,6 @@ class SaleItem(models.Model):
     saleitem_id = models.AutoField(primary_key=True)
     sale_id = models.ForeignKey(Sale, null=False, on_delete=models.CASCADE)
     product_id = models.ForeignKey(Product, null=False, on_delete=models.CASCADE)
-    imei = models.ForeignKey(ProductItems,null=True,on_delete=models.SET_NULL)
+    imei = models.ForeignKey(ProductItem,null=True,on_delete=models.SET_NULL)
     quantity = models.IntegerField(null=False,blank=False)
     selling_price = models.DecimalField(max_digits=10,decimal_places=2,null=False,blank=False)

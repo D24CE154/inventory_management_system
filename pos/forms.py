@@ -1,4 +1,7 @@
 from django import forms
+from django.forms import modelformset_factory
+
+from inventory.models import ProductItem
 from .models import Sale, SaleItem, Customer, Product
 
 class SaleForm(forms.ModelForm):
@@ -12,11 +15,17 @@ class SaleForm(forms.ModelForm):
         fields = ['customer_name', 'phone', 'address', 'payment_method']
 
 class SaleItemForm(forms.ModelForm):
-    product_id = forms.ModelChoiceField(queryset=Product.objects.all(), label='Product')
-    product_category = forms.ChoiceField(choices=[('Accessories', 'Accessories'), ('Electronics', 'Electronics')])
-    imei = forms.CharField(max_length=255, required=False)
-    check_availability = forms.BooleanField(required=False, label='Check Availability')
-
     class Meta:
         model = SaleItem
-        fields = ['product_id', 'quantity', 'product_category', 'imei', 'check_availability']
+        fields = ['product_id', 'quantity']
+        widgets = {
+            'product_id': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+SaleItemFormSet = modelformset_factory(
+    SaleItem,
+    form=SaleItemForm,
+    extra=1,
+    can_delete=True,
+)

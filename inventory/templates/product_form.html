@@ -1,0 +1,71 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}{{ form.instance.pk|yesno:"Edit Product,Add Product" }}{% endblock %}
+
+{% block breadcrumb %}
+    <span class="current">Products</span>
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='product_form' %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/add_employee.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Product Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.brand.id_for_label }}">Brand</label>
+                {{ form.brand }}
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const categorySelect = document.getElementById('category-select');
+            const brandSelect = document.getElementById('brand-select');
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function () {
+                    const categoryId = categorySelect.value;
+
+                    if (categoryId) {
+                        fetch(`/inventory/api/get-brands/?category_id=${categoryId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                brandSelect.innerHTML = '<option value="">Select Brand</option>';
+                                data.forEach(brand => {
+                                    const option = document.createElement('option');
+                                    option.value = brand.id;
+                                    option.textContent = brand.name;
+                                    brandSelect.appendChild(option);
+                                });
+                                brandSelect.disabled = data.length === 0;
+                            })
+                            .catch(error => console.error('Error fetching brands:', error));
+                    } else {
+                        brandSelect.innerHTML = '<option value="">Select Brand</option>';
+                        brandSelect.disabled = true;
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

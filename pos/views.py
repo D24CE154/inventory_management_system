@@ -8,8 +8,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import formset_factory
-from .models import Sale, SaleItem, Customer, ProductItems
-from .forms import SaleForm, SaleItemForm
+from .models import Sale, SaleItem, Customer, ProductItem
+from .forms import SaleForm, SaleItemForm,SaleItemFormSet
 import razorpay
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -18,65 +18,81 @@ from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
-from inventory.models import Product, ProductItems, ProductCategory
+from inventory.models import Product, ProductItem, ProductCategory
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-@login_required
 def create_sale(request):
-    SaleItemFormSet = formset_factory(SaleItemForm, extra=1)
     if request.method == 'POST':
         sale_form = SaleForm(request.POST)
         formset = SaleItemFormSet(request.POST)
+
         if sale_form.is_valid() and formset.is_valid():
+            customer_name = sale_form.cleaned_data['customer_name']
+            phone = sale_form.cleaned_data['phone']
+            email = sale_form.cleaned_data['email']
+            address = sale_form.cleaned_data['address']
+            payment_method = sale_form.cleaned_data['payment_method']
+
             customer, _ = Customer.objects.get_or_create(
-                customer_phone=sale_form.cleaned_data['phone'],
+                phone=phone,
                 defaults={
-                    'customer_name': sale_form.cleaned_data['customer_name'],
-                    'customer_address': sale_form.cleaned_data['address']
+                    'name': customer_name,
+                    'email': email,
+                    'address': address
                 }
             )
 
-            sale = sale_form.save(commit=False)
-            sale.customer_id = customer
-            sale.employee_id = request.user.employee
+            sale = Sale.objects.create(customer_id=customer, payment_method=payment_method)
 
             total_amount = 0
+
             for form in formset:
-                quantity = form.cleaned_data['quantity']
                 product = form.cleaned_data['product_id']
-                total_amount += product.selling_price * quantity
-
+                quantity = form.cleaned_data['quantity']
+                category = form.cleaned_data['product_category']
                 imei = form.cleaned_data.get('imei')
-                if imei:
-                    product_item = get_object_or_404(ProductItems, imei=imei)
-                    form.cleaned_data['imei'] = product_item
 
+                # Determine price
+                if category == 'Electronics' and imei:
+                    price = imei.price
+                    imei.status = 'Sold'
+                    imei.save()
+                elif category == 'Accessories':
+                    non_serialized_item = ProductItem.objects.filter(
+                        product=product,
+                        product_type='NonSerialized'
+                    ).first()
+                    if non_serialized_item:
+                        price = non_serialized_item.price
+                    else:
+                        messages.error(request, f"No price found for accessory product: {product}")
+                        sale.delete()  # Cleanup
+                        return redirect('create_sale')
+                else:
+                    price = 0  # fallback
+
+                total_amount += price * quantity
+
+                # Create sale item
                 sale_item = form.save(commit=False)
                 sale_item.sale_id = sale
+                sale_item.imei = imei if category == 'Electronics' else None
+                sale_item.price = price
                 sale_item.save()
 
+                # Update product stock
+                product.stock -= quantity
+                product.save()
+
+            # Update total amount
             sale.total_amount = total_amount
+            sale.save()
 
-            if sale_form.cleaned_data['payment_method'] == 'UPI':
-                razorpay_order = client.order.create({
-                    'amount': int(total_amount * 100),  # In paise
-                    'currency': 'INR',
-                    'payment_capture': '1'
-                })
-                request.session['sale_data'] = {
-                    'sale_form': sale_form.cleaned_data,
-                    'formset': [form.cleaned_data for form in formset],
-                    'razorpay_order_id': razorpay_order['id']
-                }
-                return render(request, 'razorpay_payment.html', {
-                    'order_id': razorpay_order['id'],
-                    'amount': total_amount * 100,
-                    'key_id': settings.RAZORPAY_KEY_ID,
-                    'customer_name': customer.customer_name,
-                    'phone': customer.customer_phone
-                })
+            messages.success(request, f"Sale created successfully. Total amount: ₹{total_amount}")
+            return redirect('sale_detail', sale_id=sale.sale_id)
 
-            return finalize_sale(request, sale, formset, customer)
+        else:
+            messages.error(request, "Please correct the errors below.")
 
     else:
         sale_form = SaleForm()
@@ -126,7 +142,7 @@ def finalize_sale(request, sale, formset, customer):
         sale_item.save()
 
         if sale_item.imei:
-            product_item = get_object_or_404(ProductItems, pk=sale_item.imei.pk)
+            product_item = get_object_or_404(ProductItem, pk=sale_item.imei.pk)
             product_item.status = 'Sold'
             product_item.save()
         else:

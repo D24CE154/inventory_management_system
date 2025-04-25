@@ -30,7 +30,6 @@ OTP_RESEND_LIMIT = 3
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-
 def send_otp_email(email, otp):
     subject = 'Your OTP for Account Verification'
     message = f'Your OTP for account verification is: {otp}. Valid for 5 minutes.'
@@ -43,7 +42,6 @@ def send_otp_email(email, otp):
     except Exception as e:
         print(f"Email sending failed: {e}")
         return False
-
 
 def verify_otp(request):
     if not is_active_admin(request.user):
@@ -106,7 +104,6 @@ def verify_otp(request):
 
     return redirect("add_employee")
 
-
 @login_required(login_url='login')
 def add_employee(request):
     if not is_active_admin(request.user):
@@ -150,7 +147,6 @@ def add_employee(request):
 
     return render(request, "add_employee.html", {"form": SignupForm(), "logged_in_employee": employee})
 
-
 @login_required(login_url='login')
 def delete_employee(request, employee_id):
     if not is_active_admin(request.user):
@@ -165,7 +161,8 @@ def delete_employee(request, employee_id):
 
         user = employee.user
         employee_name = employee.full_name
-        user.delete()
+        user.is_active = False
+        user.save()
 
         messages.success(request, f"Employee {employee_name} has been deleted successfully.")
         return redirect('employee_management')
@@ -173,7 +170,6 @@ def delete_employee(request, employee_id):
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found.")
         return redirect('employee_management')
-
 
 @login_required(login_url='login')
 def employee_management(request):
@@ -203,11 +199,10 @@ def employee_management(request):
         'employees': employees,
         'role_counts': role_counts,
         'search_query': search_query,
-        'employee': Employee.objects.get(employee_id=request.user.employee.employee_id)
+        'logged_in_employee': request.user.employee,
     }
 
     return render(request, "employee_management.html", context)
-
 
 def resend_otp(request):
     if not request.session.get("signup_data"):
@@ -240,7 +235,6 @@ def resend_otp(request):
         messages.error(request, "Failed to resend OTP. Try again.")
 
     return render(request, 'add_employee.html', {"otp_sent": True, "otp_resend_attempts": resend_attempts + 1})
-
 
 def login_view(request):
     login_form = LoginForm(request.POST or None)
@@ -288,7 +282,6 @@ def login_view(request):
 
     return render(request, "login.html", {"login_form": login_form})
 
-
 def forgot_password_view(request):
     if request.method == 'POST':
         forgot_password_form = ForgotPassword(request.POST)
@@ -332,7 +325,6 @@ def forgot_password_view(request):
 
     return render(request, 'forgot_password.html', {'forgot_password_form': forgot_password_form})
 
-
 def reset_password_view(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -358,13 +350,11 @@ def reset_password_view(request, uidb64, token):
 
     return render(request, "reset-password.html", {"form": form})
 
-
 def logout_view(request):
     logout(request)
     request.session.flush()
     request.session.modified = True
     return redirect('login')
-
 
 @login_required(login_url='login')
 def redirect_based_on_role(request):
@@ -388,21 +378,17 @@ def redirect_based_on_role(request):
     except Employee.DoesNotExist:
         return redirect("error_404")
 
-
 def error_404_view(request, exception=404):
     return render(request, 'errors/404.html', status=404)
 
-
 def error_403_view(request, exception=403):
     return render(request, 'errors/403.html', status=403)
-
 
 def error_500_view(request, exception=500):
     context = {
         'timestamp': datetime.datetime.now(),
     }
     return render(request, 'errors/500.html', context, status=500)
-
 
 @login_required(login_url='login')
 def adminDashboard(request):
@@ -438,9 +424,6 @@ def adminDashboard(request):
     revenue_change = calculate_percentage_change(current_month_revenue, previous_month_revenue)
     sales_change = calculate_percentage_change(current_month_sales, previous_month_sales)
 
-    revenue_change = abs(revenue_change)
-    sales_change = abs(sales_change)
-
     revenue_data = {
         'last_7_days': get_revenue_data(last_7_days, today),
         'last_30_days': get_revenue_data(last_30_days, today),
@@ -464,7 +447,11 @@ def adminDashboard(request):
     employee_count = Employee.objects.count()
 
     recent_sales = Sale.objects.select_related('customer_id').order_by('-sale_date')[:5]
-    low_stock_products = Product.objects.filter(stock__lte=10).order_by('stock')[:5]
+
+    # Calculate low stock products
+    low_stock_products = Product.objects.annotate(
+        total_stock=Sum('items__quantity')
+    ).filter(total_stock__lte=10).order_by('total_stock')[:5]
 
     context = {
         'total_revenue': total_revenue,
@@ -482,12 +469,10 @@ def adminDashboard(request):
 
     return render(request, 'admin_dashboard.html', context)
 
-
 def calculate_percentage_change(current, previous):
     if previous == 0:
         return 100 if current > 0 else 0
     return int(((current - previous) / previous) * 100)
-
 
 def get_revenue_data(start_date, end_date):
     sales_by_date = Sale.objects.filter(
@@ -504,7 +489,6 @@ def get_revenue_data(start_date, end_date):
     data = [float(sales_dict.get(date, 0)) for date in date_range]
 
     return {'labels': labels, 'data': data}
-
 
 def get_category_sales_data(start_date, end_date):
     categories = ProductCategory.objects.all()
@@ -523,7 +507,7 @@ def get_category_sales_data(start_date, end_date):
         ).aggregate(total=Sum('item_total'))['total'] or 0
 
         sales_by_category.append({
-            'category': category.category_name,
+            'category': category.name,
             'total': float(total)
         })
 
@@ -533,19 +517,16 @@ def get_category_sales_data(start_date, end_date):
 
     return {'labels': labels, 'data': data}
 
-
 def is_active_employee(user):
     if user.is_authenticated and user.employee.is_active and (
             user.employee.role in ['Admin', 'Sales Executive', 'Inventory Manager']):
         return True
     return False
 
-
 def is_active_admin(user):
     if user.is_authenticated and user.employee.role == 'Admin' and user.employee.is_active:
         return True
     return False
-
 
 @login_required(login_url='login')
 def view_employee_details(request, employee_id):
@@ -569,7 +550,6 @@ def view_employee_details(request, employee_id):
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found")
         return redirect('employee_management')
-
 
 @login_required()
 def edit_employee(request, employee_id):

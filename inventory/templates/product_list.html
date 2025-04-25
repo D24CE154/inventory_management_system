@@ -1,86 +1,69 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
-
-{% block title %}Product List | IG Mobile{% endblock %}
+{% block page_title %}Products{% endblock %}
+{% block breadcrumb %}
+    <span class="current">Products</span>
+{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/products.css' %}">
+    <link rel="stylesheet" href="{% static 'css/inventory.css' %}">
 {% endblock %}
-
-{% block breadcrumb %}
-    <span class="current">Product Management</span>
-{% endblock %}
-
-{% block page_title %}Product List{% endblock %}
-{% block page_description %}List of all products{% endblock %}
 
 {% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='products' %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='product_list' %}
 {% endblock %}
 
 {% block content %}
-    <div class="chart-card">
-        <div class="chart-header">
-            <h3 class="chart-title">Product List</h3>
-            <div class="chart-actions">
-                <a href="{% url 'add_product' %}" class="btn btn-primary">Add Serialized Product</a>
-            </div>
-        </div>
-        <div class="p-4">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Product Name</th>
-                    <th>Category</th>
-                    <th>Brand</th>
-                    <th>Stock</th>
-                    <th>Actions</th>
+    <div class="container mt-4">
+        <h1>Products</h1>
+        <a href="{% url 'product_create' %}" class="btn btn-primary mb-3">Add Product</a>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Stock on Hand</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for product in products %}
+                <tr id="product-row-{{ product.pk }}">
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.category.name }}</td>
+                    <td>{{ product.brand.name }}</td>
+                    <td>{{ product.total_stock }}</td>
+                    <td>
+                        <a href="{% url 'product_update' product.pk %}" class="btn-icon btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'product_stock' product.pk %}" class="btn-icon btn-stock" title="View Stock">
+                            <i class="fas fa-boxes"></i>
+                        </a>
+                        <button class="btn-icon btn-delete" onclick="confirmDeleteProduct({{ product.pk }}, '{{ product.name }}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
                 </tr>
-                </thead>
-                <tbody>
-                {% for product in products %}
-                    <tr>
-                        <td>{{ product.product_name }}</td>
-                        <td>{{ product.category_id.category_name }}</td>
-                        <td>{{ product.brand.brand_name }}</td>
-                        <td>{{ product.stock }}</td>
-                        <td>
-                            <a href="{% url 'edit_product' product.product_id %}" class="btn btn-icon btn-edit"><i class="fas fa-edit"></i></a>
-                            <button onclick="confirmDeleteProduct('{{ product.product_id }}', '{{ product.product_name }}')" class="btn btn-icon btn-delete"><i class="fas fa-trash"></i></button>
-                            <a href="{% url 'product_items_list' product.product_id %}" class="btn btn-icon btn-view"><i class="fas fa-eye"></i></a>
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <div class="pagination">
-                {% if products.has_previous %}
-                    <a href="?page={{ products.previous_page_number }}" class="btn btn-outline">Previous</a>
-                {% endif %}
-                <span class="page-info">Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
-                {% if products.has_next %}
-                    <a href="?page={{ products.next_page_number }}" class="btn btn-outline">Next</a>
-                {% endif %}
-            </div>
-        </div>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
-{% endblock %}
-
-{% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function confirmDeleteProduct(id, name) {
             Swal.fire({
-                title: 'Are you sure?',
-                text: `You want to delete ${name}?`,
-                icon: 'warning',
+                title: "Are you sure?",
+                text: `Delete product ${name}? This action cannot be undone.`,
+                icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `delete/${id}/`;
+                    window.location.href = `/inventory/products/${id}/delete/`;
                 }
             });
         }

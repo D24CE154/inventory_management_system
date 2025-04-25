@@ -1,0 +1,86 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+{% block page_title %}Product Stock{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'inventoryManagerDashboard' %}">Inventory Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'product_list' %}">Products</a>
+    <span class="separator">/</span>
+    <span class="current">Stock for {{ product.name }}</span>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='product_stock' %}
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1>Stock for {{ product.name }}</h1>
+        <a href="{% url 'stock_add' product.pk %}" class="btn btn-primary mb-3">Add Stock</a>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">Back to Products</a>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Image</th>
+                <th>Serial / Bulk</th>
+                <th>Item Type</th>
+                <th>Cost Price</th>
+                <th>Sale Price</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in stock_items %}
+                <tr>
+                    <td><img src="{{ item.image.url }}" alt="Stock Image" width="50"></td>
+                    <td>{{ item.serial_number|default:"Bulk ×" ~ item.quantity }}</td>
+                    <td>{{ item.item_type }}</td>
+                    <td>{{ item.cost_price }}</td>
+                    <td>{{ item.sale_price }}</td>
+                    <td class="action-buttons">
+                        <a href="{% url 'stock_edit' item.pk %}" class="btn-icon btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn-icon btn-delete" onclick="confirmDelete({{ item.pk }})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/inventory/stock/delete/${id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            Swal.fire('Error!', 'Unable to delete stock item.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+{% endblock %}

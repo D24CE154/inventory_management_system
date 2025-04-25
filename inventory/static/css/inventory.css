@@ -1,0 +1,216 @@
+/* General Table Styling */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.data-table th, .data-table td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #495057;
+}
+
+.data-table tr:hover {
+    background-color: #f1f3f5;
+}
+
+/* Action Buttons */
+.action-buttons a, .action-buttons button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #fff;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+/* ✅ Edit Button */
+.btn-icon.btn-edit {
+    background-color: transparent;
+    color: #f9a825;
+    border: 1px solid #f9a825;
+}
+
+.btn-icon.btn-edit:hover {
+    background-color: #fff8e1;
+}
+
+/* ✅ Delete Button */
+.btn-icon.btn-delete {
+    background-color: transparent;
+    color: #c62828;
+    border: 1px solid #c62828;
+}
+
+/* Form Styling */
+.form-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.form-error {
+    color: #dc3545;
+    font-size: 12px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+/* Same font and base styles as supplier CSS */
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Form Styling */
+.form-card {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #444;
+}
+
+.form-help {
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 0.25rem;
+}
+
+.form-error {
+    color: red;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Input Fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+textarea {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: border-color 0.15s ease-in-out;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Button Styling */
+.btn {
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease-in-out, opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Button Colors */
+.btn-primary {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-outline {
+    background: none;
+    border: 1px solid #007bff;
+    color: #007bff;
+}
+
+.btn-outline:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #fff;
+    color: #495057;
+}
+
+select:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}

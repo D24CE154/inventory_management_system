@@ -23,7 +23,7 @@ function initStockLevelChart() {
     try {
         const stockByCategory = JSON.parse(document.getElementById('stock-by-category-data').textContent || '[]');
         categoryData = stockByCategory.map(item => ({
-            category: item.category_name,
+            category: item.name,
             stock: item.stock
         }));
     } catch (e) {

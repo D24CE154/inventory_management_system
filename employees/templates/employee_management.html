@@ -16,8 +16,9 @@
 {% block page_description %}Manage all employee accounts{% endblock %}
 
 {% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with active_page='employee_management' %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='employee_management' %}
 {% endblock %}
+
 
 {% block content %}
     <div class="mb-4 flex justify-between items-center">

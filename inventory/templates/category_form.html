@@ -1,0 +1,51 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+{% block page_title %}{{ form.instance.pk|yesno:"Edit Category,Add Category" }}{% endblock %}
+
+{% block breadcrumb %}
+    <a href="{% url 'inventoryManagerDashboard' %}">Inventory Dashboard</a>
+    <span class="separator">/</span>
+    <a href="{% url 'category_list' %}">Categories</a>
+    <span class="separator">/</span>
+    <span class="current">{{ form.instance.pk|yesno:"Edit,Add" }}</span>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='category_form' %}
+{% endblock %}
+
+{% block content %}
+    <div class="form-card">
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Category Name</label>
+                        {{ form.name }}
+                        <span class="form-help">{{ form.name.help_text }}</span>
+                        {% if form.name.errors %}
+                            <span class="form-error">{{ form.name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions mt-6">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'category_list' %}" class="btn btn-outline ml-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
