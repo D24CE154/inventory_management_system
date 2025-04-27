@@ -1,103 +1,118 @@
-/* pos/static/css/sale.css */
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    width: 80%;
-    margin: 0 auto;
+.sale-form {
+    max-width: 600px;
+    margin: auto;
     padding: 20px;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
+.sale-form .form-group {
+    margin-bottom: 1.5rem;
 }
 
-form {
-    display: flex;
-    flex-direction: column;
+.sale-form .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
-form .form-group {
-    margin-bottom: 15px;
-}
-
-form .form-group label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-form .form-group input,
-form .form-group select {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+.sale-form .form-control {
     width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
 }
 
-form .form-group input[type="submit"] {
-    background-color: #007bff;
-    color: #fff;
+.sale-form .btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--color-primary);
     border: none;
+    border-radius: 4px;
     cursor: pointer;
-    padding: 15px;
-    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
-form .form-group input[type="submit"]:hover {
+.sale-form .btn:hover {
+    background-color: var(--color-secondary);
+}
+
+#addProductBtn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#addProductBtn:hover {
     background-color: #0056b3;
 }
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
+.cart-section {
     margin-top: 20px;
-}
-
-.table th,
-.table td {
-    padding: 10px;
+    padding: 15px;
     border: 1px solid #ddd;
-    text-align: left;
-}
-
-.table th {
-    background-color: #f2f2f2;
-}
-
-.table tbody tr:nth-child(even) {
+    border-radius: 5px;
     background-color: #f9f9f9;
 }
 
-.pagination {
+.cart-section h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.cart-items {
     display: flex;
-    justify-content: center;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.pagination a {
-    padding: 10px 15px;
-    margin: 0 5px;
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
     border: 1px solid #ddd;
-    text-decoration: none;
-    color: #007bff;
+    border-radius: 5px;
+    background-color: #fff;
 }
 
-.pagination a:hover {
-    background-color: #007bff;
+.cart-item .remove-btn {
+    background-color: #dc3545;
     color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
 }
 
-.page-info {
-    padding: 10px 15px;
-    margin: 0 5px;
-    border: 1px solid #ddd;
-    background-color: #f2f2f2;
+.cart-item .remove-btn:hover {
+    background-color: #c82333;
+}
+.sale-form button.btn-primary {
+    color: white !important; /* Ensure text color is white */
+    background-color: #007bff !important; /* Ensure background color is blue */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sale-form button.btn-primary:hover {
+    background-color: #0056b3 !important; /* Darker shade for hover */
+}
+
+.sale-form button.btn-primary:disabled {
+    background-color: #cccccc !important; /* Gray background for disabled state */
+    color: #666666 !important; /* Gray text for disabled state */
+    cursor: not-allowed;
 }

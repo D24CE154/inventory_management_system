@@ -28,3 +28,5 @@ urlpatterns = [
     path('pos/',include('pos.urls')),
     path('supplier/',include('supplier.urls')),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

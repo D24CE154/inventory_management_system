@@ -1,6 +1,9 @@
 import datetime
 import time
 import random
+from pos.models import *
+from supplier.models import *
+from inventory.models import *
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
@@ -22,6 +25,13 @@ from employees.models import Employee
 from inventory.models import Product, ProductCategory
 from pos.models import Sale, SaleItem
 from django.db.models.functions import TruncDate
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
+from reportlab.graphics import renderPDF
 
 OTP_EXPIRY_SECONDS = 300
 OTP_RESEND_LIMIT = 3
@@ -448,10 +458,10 @@ def adminDashboard(request):
 
     recent_sales = Sale.objects.select_related('customer_id').order_by('-sale_date')[:5]
 
-    # Calculate low stock products
+    # Calculate low stock products using annotation
     low_stock_products = Product.objects.annotate(
-        total_stock=Sum('items__quantity')
-    ).filter(total_stock__lte=10).order_by('total_stock')[:5]
+        stock=Sum('items__quantity')  # Corrected related field name
+    ).filter(stock__lte=10).order_by('stock')[:5]
 
     context = {
         'total_revenue': total_revenue,
@@ -591,3 +601,388 @@ def edit_employee(request, employee_id):
     except Employee.DoesNotExist:
         messages.error(request, "Employee not found.")
         return redirect('employee_management')
+
+def reports_analytics(request):
+    return render(request, 'base_report_analytics.html',context={"logged_in_employee" : request.user.employee})
+
+
+def employee_sales_performance_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=employee_sales_performance_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 800, "Employee Sales Performance Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    # Prepare data and list details for each employee
+    employees = Employee.objects.all()
+    sales_counts = []
+    for emp in employees:
+        sales = Sale.objects.filter(employee_id=emp)
+        total_sales = sales.count()
+        total_revenue = sales.aggregate(total=Sum("total_amount"))["total"] or 0
+        line = f"{emp.full_name}: Sales = {total_sales} | Revenue = {total_revenue}"
+        p.drawString(50, y, line)
+        y -= 20
+        sales_counts.append(total_sales)
+        if y < 300:
+            p.showPage()
+            y = 770
+
+    # Create a bar chart of sales counts per employee
+    d = Drawing(400, 200)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 100
+    bc.width = 300
+    bc.data = [sales_counts]  # single series
+    bc.strokeColor = colors.black
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(sales_counts + [1]) + 10
+    bc.valueAxis.valueStep = max(1, (bc.valueAxis.valueMax) // 5)
+    bc.categoryAxis.categoryNames = [emp.full_name for emp in employees]
+    bc.categoryAxis.labels.boxAnchor = 'ne'
+    d.add(bc)
+
+    # Draw the chart below the employee details
+    renderPDF.draw(d, p, 50, y - 220)
+    p.showPage()
+    p.save()
+    return response
+
+
+def audit_log_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=audit_log_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 800, "Audit Log Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    logs = AuditLog.objects.order_by("-date")[:20]
+    for log in logs:
+        line = f"{log.date.strftime('%Y-%m-%d %H:%M')}: {log.employee.full_name} - {log.action}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 150:
+            break
+
+    # Create a pie chart for action frequencies
+    actions = {}
+    for log in logs:
+        actions[log.action] = actions.get(log.action, 0) + 1
+    d = Drawing(300, 150)
+    pie = Pie()
+    pie.x = 65
+    pie.y = 15
+    pie.width = 170
+    pie.height = 120
+    pie.data = list(actions.values())
+    pie.labels = list(actions.keys())
+    pie.simpleLabels = True
+    d.add(pie)
+    renderPDF.draw(d, p, 50, y - 170)
+    p.showPage()
+    p.save()
+    return response
+
+def sales_summary_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=sales_summary_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(150, 800, "Sales Summary Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    total_sales = Sale.objects.count()
+    total_revenue = Sale.objects.aggregate(total=Sum("total_amount"))["total"] or 0
+    p.drawString(50, y, f"Total Sales: {total_sales}")
+    y -= 20
+    p.drawString(50, y, f"Total Revenue: {total_revenue}")
+    y -= 40
+
+    # Create bar chart comparing sales and revenue
+    d = Drawing(300, 150)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 15
+    bc.height = 100
+    bc.width = 200
+    bc.data = [[total_sales, float(total_revenue)]]
+    bc.categoryAxis.categoryNames = ["Sales", "Revenue"]
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(total_sales, float(total_revenue)) + 10
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 150)
+    p.showPage()
+    p.save()
+    return response
+
+def customer_purchase_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=customer_purchase_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(120, 800, "Customer Purchase Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    customers = Customer.objects.all()
+    purchase_counts = []
+    names = []
+    for customer in customers:
+        sales = Sale.objects.filter(customer_id=customer)
+        count = sales.count()
+        line = f"{customer.customer_name}: Purchases = {count}"
+        p.drawString(50, y, line)
+        y -= 20
+        purchase_counts.append(count)
+        names.append(customer.customer_name)
+        if y < 150:
+            break
+
+    d = Drawing(400, 200)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 100
+    bc.width = 300
+    bc.data = [purchase_counts]
+    bc.categoryAxis.categoryNames = names
+    bc.strokeColor = colors.black
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(purchase_counts + [1]) + 5
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 220)
+    p.showPage()
+    p.save()
+    return response
+
+def financial_analytics_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=financial_analytics_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(120, 800, "Financial Analytics Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    total_revenue = Sale.objects.aggregate(total=Sum("total_amount"))["total"] or 0
+    total_sales = Sale.objects.count()
+    p.drawString(50, y, f"Total Revenue: {total_revenue}")
+    y -= 20
+    p.drawString(50, y, f"Total Sales: {total_sales}")
+    y -= 40
+    p.drawString(50, y, "Additional financial metrics can be added here ...")
+    y -= 40
+
+    # Bar chart for revenue vs. sales
+    d = Drawing(300, 150)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 15
+    bc.height = 100
+    bc.width = 200
+    bc.data = [[total_revenue, total_sales]]
+    bc.categoryAxis.categoryNames = ["Revenue", "Sales"]
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(total_revenue, total_sales) + 10
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 150)
+    p.showPage()
+    p.save()
+    return response
+
+def product_inventory_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=product_inventory_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(140, 800, "Product Inventory Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    products = Product.objects.all()
+    stocks = []
+    names = []
+    for product in products:
+        stock = product.total_stock
+        line = f"{product.name}: Total Stock = {stock}"
+        p.drawString(50, y, line)
+        y -= 20
+        stocks.append(stock)
+        names.append(product.name)
+        if y < 150:
+            break
+
+    d = Drawing(400, 200)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 100
+    bc.width = 300
+    bc.data = [stocks]
+    bc.categoryAxis.categoryNames = names
+    bc.strokeColor = colors.black
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(stocks + [1]) + 10
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 220)
+    p.showPage()
+    p.save()
+    return response
+
+def product_category_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=product_category_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(130, 800, "Product Category Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    categories = ProductCategory.objects.all()
+    category_names = []
+    product_counts = []
+    for category in categories:
+        count = category.product_set.count()
+        line = f"{category.name}: Products Available = {count}"
+        p.drawString(50, y, line)
+        y -= 20
+        category_names.append(category.name)
+        product_counts.append(count)
+        if y < 150:
+            break
+
+    d = Drawing(300, 150)
+    pie = Pie()
+    pie.x = 65
+    pie.y = 15
+    pie.width = 170
+    pie.height = 120
+    pie.data = product_counts
+    pie.labels = category_names
+    pie.simpleLabels = True
+    d.add(pie)
+    renderPDF.draw(d, p, 50, y - 170)
+    p.showPage()
+    p.save()
+    return response
+
+def brand_performance_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=brand_performance_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(160, 800, "Brand Performance Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    brands = Brand.objects.all()
+    names = []
+    counts = []
+    for brand in brands:
+        count = brand.product_set.count()
+        line = f"{brand.name}: Products Count = {count}"
+        p.drawString(50, y, line)
+        y -= 20
+        names.append(brand.name)
+        counts.append(count)
+        if y < 150:
+            break
+
+    d = Drawing(400, 200)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 100
+    bc.width = 300
+    bc.data = [counts]
+    bc.categoryAxis.categoryNames = names
+    bc.strokeColor = colors.black
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(counts + [1]) + 5
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 220)
+    p.showPage()
+    p.save()
+    return response
+
+def purchase_orders_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=purchase_orders_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(120, 800, "Purchase Orders Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    orders = PurchaseOrder.objects.all()
+    status_counts = {}
+    for order in orders:
+        status_counts[order.status] = status_counts.get(order.status, 0) + 1
+        line = f"Order ID {order.purchase_order_id}: Supplier {order.supplier_id.supplier_name} | Total Cost: {order.total_cost} | Status: {order.status}"
+        p.drawString(50, y, line)
+        y -= 20
+        if y < 150:
+            break
+
+    d = Drawing(300, 150)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 15
+    bc.height = 100
+    bc.width = 200
+    bc.data = [list(status_counts.values())]
+    bc.categoryAxis.categoryNames = list(status_counts.keys())
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(list(status_counts.values()) + [1]) + 2
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 170)
+    p.showPage()
+    p.save()
+    return response
+
+def supplier_report_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=supplier_report.pdf"
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(150, 800, "Supplier Report")
+    p.setFont("Helvetica", 12)
+    y = 770
+
+    suppliers = Supplier.objects.all()
+    names = []
+    order_counts = []
+    for supplier in suppliers:
+        orders = PurchaseOrder.objects.filter(supplier_id=supplier)
+        count = orders.count()
+        line = f"{supplier.supplier_name}: Contact {supplier.contact_person} | Orders: {count}"
+        p.drawString(50, y, line)
+        y -= 20
+        names.append(supplier.supplier_name)
+        order_counts.append(count)
+        if y < 150:
+            break
+
+    d = Drawing(400, 200)
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 100
+    bc.width = 300
+    bc.data = [order_counts]
+    bc.categoryAxis.categoryNames = names
+    bc.strokeColor = colors.black
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = max(order_counts + [1]) + 5
+    d.add(bc)
+    renderPDF.draw(d, p, 50, y - 220)
+    p.showPage()
+    p.save()
+    return response

@@ -1,0 +1,134 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Reports & Analytics | IG Mobile{% endblock %}
+
+{% block breadcrumb %}
+    <span class="current">Reports & Analytics</span>
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/report_analytics.css' %}">
+{% endblock %}
+
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block page_description %}Overview of system reports and analytics{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='reports_analytics' %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Reports & Analytics</h1>
+
+        <section class="report-section">
+            <h2>Employee Reports</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'employee_sales_performance_report_pdf' %}" download>
+                        Employee Sales Performance Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Audit Log Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'audit_log_report_pdf' %}" download>
+                        Audit Log Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Sales Summary Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'sales_summary_report_pdf' %}" download>
+                        Sales Summary Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Customer Purchase Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'customer_purchase_report_pdf' %}" download>
+                        Customer Purchase Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Financial Analytics Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'financial_analytics_report_pdf' %}" download>
+                        Financial Analytics Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Product Inventory Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'product_inventory_report_pdf' %}" download>
+                        Product Inventory Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Product Category Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'product_category_report_pdf' %}" download>
+                        Product Category Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Brand Performance Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'brand_performance_report_pdf' %}" download>
+                        Brand Performance Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Purchase Orders Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'purchase_orders_report_pdf' %}" download>
+                        Purchase Orders Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <section class="report-section">
+            <h2>Supplier Report</h2>
+            <ul>
+                <li>
+                    <a href="{% url 'supplier_report_pdf' %}" download>
+                        Supplier Report (PDF)
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </div>
+{% endblock %}

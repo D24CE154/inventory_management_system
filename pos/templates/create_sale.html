@@ -1,39 +1,81 @@
 {% extends 'base_dashboard.html' %}
 {% load static %}
-
-{% block title %}Create Sale | IG Mobile{% endblock %}
-
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/sale.css' %}">
-{% endblock %}
+{% block page_title %}Create Sale | POS{% endblock %}
+{% block title %}Create Sale | POS{% endblock %}
 
 {% block breadcrumb %}
     <span class="current">Create Sale</span>
 {% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/sale.css' %}">
+{% endblock %}
 
 {% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with employee=logged_in_employee employee=logged_in_employee active_page='create_sale' %}
+    {% include 'menus/common_sidebar.html' with employee=logged_in_employee active_page='create_sale' %}
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h2>Create Sale</h2>
-        <form method="post">
+    <div class="sale-form">
+        <form id="saleForm" method="post">
             {% csrf_token %}
-            {{ sale_form.as_p }}
-            {{ formset.management_form }}
+            <div class="form-group">
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="customer_address">Customer Address</label>
+                <input type="text" id="customer_address" name="customer_address" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="customer_phone">Customer Phone</label>
+                <input type="text" id="customer_phone" name="customer_phone" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="customer_email">Customer Email</label>
+                <input type="email" id="customer_email" name="customer_email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Product Category</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="">Select Category</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="productDropdownField" class="form-group" style="display: none;">
+                <label for="productDropdown">Product</label>
+                <select id="productDropdown" name="productDropdown" class="form-control"></select>
+            </div>
+            <div id="imeiField" class="form-group" style="display: none;">
+                <label for="imei">IMEI</label>
+                <input type="text" id="imei" name="imei" class="form-control">
+            </div>
+            <div id="quantityField" class="form-group" style="display: none;">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" class="form-control" min="1">
+            </div>
+            <button type="button" id="addProductBtn" class="btn btn-secondary">Add Product</button>
 
-            {% for form in formset %}
-                <fieldset class="form-group">
-                    <legend>Product {{ forloop.counter }}</legend>
-                    {{ form.product_id.label_tag }} {{ form.product_id }}
-                    {{ form.quantity.label_tag }} {{ form.quantity }}
-                    {{ form.product_category.label_tag }} {{ form.product_category }}
-                    {{ form.imei.label_tag }} {{ form.imei }}
-                </fieldset>
-            {% endfor %}
+            <div class="cart-section">
+                <h3>Cart</h3>
+                <div id="productList" class="cart-items">
+                    <p>No products added yet.</p>
+                </div>
+            </div>
 
-            <button type="submit" class="btn btn-primary">Submit Sale</button>
+            <div class="form-group">
+                <label for="paymentMethod">Payment Method</label>
+                <select id="paymentMethod" name="paymentMethod" class="form-control">
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Complete Sale</button>
         </form>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/create_sale.js' %}"></script>
 {% endblock %}

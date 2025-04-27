@@ -1,33 +1,289 @@
-<!-- pos/templates/pos/invoice_template.html -->
-{% extends 'base_dashboard.html' %}
+<!DOCTYPE html>
+{# Removed {% load mathfilters %} #}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ sale.sale_id }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .invoice-container {
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+        }
+        .header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            /* Using simple table for layout compatibility with xhtml2pdf */
+            width: 100%;
+        }
+        .header td {
+            vertical-align: top;
+        }
+        .shop-details {
+            text-align: left;
+        }
+        .shop-details h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #000;
+        }
+        .shop-details p {
+            margin: 2px 0;
+            font-size: 11px;
+            color: #555;
+        }
+        .invoice-title {
+            text-align: right;
+        }
+        .invoice-title h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #555;
+        }
+        .details-section {
+            margin-bottom: 25px;
+            /* Using table for two-column layout */
+            width: 100%;
+        }
+        .details-section td {
+            width: 50%;
+            vertical-align: top;
+            padding-right: 10px; /* Spacing between columns */
+        }
+        .details-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            color: #000;
+        }
+        .details-section table {
+            width: 100%;
+            font-size: 11px;
+        }
+        .details-section th {
+            text-align: left;
+            width: 80px; /* Fixed width for labels */
+            padding-right: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+        .details-section td.value {
+            text-align: left;
+        }
 
-{% block title %}Invoice | IG Mobile{% endblock %}
+        .order-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .order-details th, .order-details td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .order-details th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .order-details td {
+            font-size: 11px;
+        }
+        .order-details .item-name {
+            font-weight: bold;
+        }
+        .order-details .item-desc {
+            font-size: 10px;
+            color: #666;
+        }
+        .order-details .number {
+            text-align: right;
+        }
+        .totals-section {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .totals-section td {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .totals-section .label {
+            text-align: right;
+            font-weight: bold;
+            width: 80%;
+        }
+        .totals-section .value {
+            text-align: right;
+            font-weight: bold;
+        }
+        .totals-section .grand-total .label,
+        .totals-section .grand-total .value {
+            font-size: 14px;
+            color: #000;
+            border-top: 2px solid #eee;
+            padding-top: 10px;
+        }
+        .payment-mode {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        .terms {
+            font-size: 10px;
+            color: #666;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .terms h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 12px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+            color: #888;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="invoice-container">
+    <table class="header">
+        <tr>
+            <td class="shop-details">
+                <h1>IG Mobile</h1>
+                <p>Address Line 1, Address Line 2</p>
+                <p>City, State, ZIP Code</p>
+                <p>Phone: +91-XXXXXXXXXX | Email: shop@example.com</p>
+                <p>GSTIN: 123456789ABCDE</p>
+            </td>
+            <td class="invoice-title">
+                <h2>INVOICE</h2>
+            </td>
+        </tr>
+    </table>
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/sale.css' %}">
-{% endblock %}
+    <table class="details-section">
+        <tr>
+            <td>
+                <h3>Bill To:</h3>
+                <table>
+                    <tr><th>Name:</th><td class="value">{{ sale.customer_id.customer_name }}</td></tr>
+                    <tr><th>Address:</th><td class="value">{{ sale.customer_id.customer_address }}</td></tr>
+                    <tr><th>Phone:</th><td class="value">{{ sale.customer_id.customer_phone }}</td></tr>
+                    {% if sale.customer_id.customer_email %}
+                        <tr><th>Email:</th><td class="value">{{ sale.customer_id.customer_email }}</td></tr>
+                    {% endif %}
+                </table>
+            </td>
+            <td>
+                <h3>Invoice Details:</h3>
+                <table>
+                    <tr><th>Invoice #:</th><td class="value">{{ sale.sale_id }}</td></tr>
+                    <tr><th>Date:</th><td class="value">{{ sale.sale_date|date:"d M Y, H:i" }}</td></tr>
+                    <tr><th>Payment Mode:</th><td class="value">{{ sale.payment_method }}</td></tr>
+                    {% if sale.razorpay_order_id %}
+                        <tr><th>Order ID:</th><td class="value">{{ sale.razorpay_order_id }}</td></tr>
+                    {% endif %}
+                </table>
+            </td>
+        </tr>
+    </table>
 
-{% block breadcrumb %}
-    <span class="current">Invoice</span>
-{% endblock %}
-
-{% block sidebar_menu %}
-    {% include 'menus/common_sidebar.html' with employee=logged_in_employee employee=logged_in_employee active_page='invoice' %}
-{% endblock %}
-
-{% block content %}
-    <div class="container">
-        <h1>Invoice</h1>
-        <p>Customer: {{ customer.customer_name }}</p>
-        <p>Phone: {{ customer.customer_phone }}</p>
-        <p>Address: {{ customer.customer_address }}</p>
-        <p>Payment Method: {{ payment_method }}</p>
-        <p>Total: {{ total }}</p>
-        <h2>Items</h2>
-        <ul>
+    <div class="order-details">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Product Description</th>
+                <th class="number">Unit Price</th>
+                <th class="number">Quantity/IMEI</th>
+                <th class="number">Sub-total</th>
+            </tr>
+            </thead>
+            <tbody>
+            {# Ensure 'sale_items' passed from the view contains 'calculated_subtotal' for each item #}
             {% for item in sale_items %}
-                <li>{{ item.product_id.product_name }} - {{ item.quantity }} - {{ item.selling_price }}</li>
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <div class="item-name">{{ item.product_id.name }}</div> {# Corrected: Use product_id.name #}
+                        {% if item.imei %}
+                            <div class="item-desc">IMEI: {{ item.imei.serial_number }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="number">₹{{ item.selling_price|floatformat:2 }}</td>
+                    <td class="number">
+                        {% if item.imei %}
+                            1 {# Serialized items have quantity 1 #}
+                        {% else %}
+                            {{ item.quantity }} {# Non-serialized items use quantity #}
+                        {% endif %}
+                    </td>
+                    {# Use the pre-calculated subtotal passed from the view #}
+                    <td class="number">₹{{ item.calculated_subtotal|floatformat:2 }}</td>
+                </tr>
             {% endfor %}
-        </ul>
+            </tbody>
+        </table>
     </div>
-{% endblock %}
+
+    <table class="totals-section">
+        {# Ensure 'calculated_gross_total' is passed from the view (sale.total_amount + discount) #}
+        <tr>
+            <td class="label">Subtotal:</td>
+            <td class="value">₹{{ calculated_gross_total|floatformat:2 }}</td>
+        </tr>
+        {% if discount > 0 %}
+            <tr>
+                <td class="label">Discount:</td> {# Removed specific % #}
+                <td class="value">‐ ₹{{ discount|floatformat:2 }}</td>
+            </tr>
+        {% endif %}
+        {% comment %} Add GST calculation here if needed
+        <tr>
+            <td class="label">GST (e.g., 18%):</td>
+            <td class="value">₹{{ gst_amount|floatformat:2 }}</td> {# Pass gst_amount from view #}
+        </tr>
+        {% endcomment %}
+        <tr class="grand-total">
+            <td class="label">Grand Total:</td>
+            <td class="value">₹{{ sale.total_amount|floatformat:2 }}</td>
+        </tr>
+    </table>
+
+    <div class="payment-mode">
+        <strong>Amount in Words:</strong> Rupees {{ amount_in_words }} Only. {# Pass 'amount_in_words' from view #}
+    </div>
+
+    <div class="terms">
+        <h4>Terms & Conditions</h4>
+        <p>1. Goods once sold will not be taken back or exchanged.</p>
+        <p>2. Warranty as per manufacturer's terms.</p>
+        <p>3. All disputes subject to [Your City] jurisdiction only.</p>
+    </div>
+
+    <div class="footer">
+        <p>This is a computer-generated invoice and does not require a signature.</p>
+        <p>Thank you for shopping with IG Mobile!</p>
+    </div>
+</div>
+</body>
+</html>

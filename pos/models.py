@@ -1,11 +1,7 @@
 #point of sales model
-
-
 from django.db import models
-from django.utils import timezone
-
 from employees.models import Employee
-from inventory.models import Product, ProductItem
+from inventory.models import Product, ProductItem, ProductCategory, Brand
 
 
 class Customer(models.Model):
@@ -13,6 +9,7 @@ class Customer(models.Model):
     customer_name = models.CharField(max_length=255,null=False,blank=False)
     customer_address = models.CharField(max_length=255,null=False,blank=False)
     customer_phone = models.CharField(max_length=255,null=False,blank=False,unique=True)
+    customer_email = models.EmailField(null=True,blank=True,unique=True)
 
 class Sale(models.Model):
     paymentMethods = [

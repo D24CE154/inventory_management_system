@@ -33,26 +33,27 @@ class ProductForm(ModelForm):
 class ProductItemForm(forms.ModelForm):
     class Meta:
         model = ProductItem
-        fields = ['serial_number', 'quantity', 'cost_price', 'sale_price', 'image']
+        fields = ['serial_number', 'quantity', 'cost_price', 'sale_price']
 
     def __init__(self, *args, **kwargs):
-        category = kwargs.pop('category', None)  # Get the category from kwargs
+        self.category = kwargs.pop('category', None)  # Get the category from kwargs
         super().__init__(*args, **kwargs)
 
         # Dynamically add category-specific fields
-        if category in CATEGORY_SPEC_FIELDS:
-            for field in CATEGORY_SPEC_FIELDS[category]:
+        if self.category in CATEGORY_SPEC_FIELDS:
+            for field in CATEGORY_SPEC_FIELDS[self.category]:
                 self.fields[field] = forms.CharField(
                     required=True,
                     widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': field})
                 )
 
         # Handle item_type and quantity fields based on category
-        if category == "Accessories":
+        if self.category == "Accessories":
             self.fields['item_type'] = forms.CharField(
                 initial=ProductItem.NON_SERIAL,
                 widget=forms.HiddenInput()
             )
+            self.fields['serial_number'].widget = forms.HiddenInput()  # Hide IMEI field
         else:
             self.fields['item_type'] = forms.CharField(
                 initial=ProductItem.SERIALIZED,

@@ -1,0 +1,60 @@
+:root {
+    --color-primary: #3b82f6;
+    --color-secondary: #2563eb;
+    --color-danger: #dc3545;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --text-color: #374151;
+    --border-color: #e5e7eb;
+    --background-color: #f9fafb;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.sale-form {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--color-secondary);
+}

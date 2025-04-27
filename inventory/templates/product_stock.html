@@ -3,15 +3,14 @@
 {% block page_title %}Product Stock{% endblock %}
 
 {% block breadcrumb %}
-    <a href="{% url 'inventoryManagerDashboard' %}">Inventory Dashboard</a>
-    <span class="separator">/</span>
     <a href="{% url 'product_list' %}">Products</a>
     <span class="separator">/</span>
     <span class="current">Stock for {{ product.name }}</span>
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+    <link rel="stylesheet" href="{% static 'css/product_stock.css' %}">
+    <link rel="stylesheet" href="{% static 'css/employee_management.css' %}">
 {% endblock %}
 
 {% block sidebar_menu %}
@@ -19,66 +18,102 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h1>Stock for {{ product.name }}</h1>
-        <a href="{% url 'stock_add' product.pk %}" class="btn btn-primary mb-3">Add Stock</a>
-        <a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">Back to Products</a>
-        <table class="data-table">
-            <thead>
-            <tr>
-                <th>Image</th>
-                <th>Serial / Bulk</th>
-                <th>Item Type</th>
-                <th>Cost Price</th>
-                <th>Sale Price</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for item in stock_items %}
+    <div class="product-stock-container">
+        <!-- Product Stock Header -->
+        <div class="product-stock-header">
+            <h1>Stock for {{ product.name }}</h1>
+        </div>
+
+        <!-- Combined Actions Section -->
+        <div class="product-stock-actions">
+            <h2>Manage Stock</h2>
+            <div class="action-buttons">
+                <a href="{% url 'stock_add' product.pk %}" class="btn btn-primary">Add Stock</a>
+                <a href="{% url 'download_excel_template' product.pk %}" class="btn btn-download">Download Excel Template</a>
+            </div>
+            <form method="POST" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="excel_file">Upload Excel File</label>
+                    <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx">
+                </div>
+                <button type="submit" id="upload_stock_btn" class="btn btn-success" disabled>Upload Stock</button>
+            </form>
+        </div>
+
+        <!-- Stock Table Section -->
+        <div class="product-stock-table-section">
+            <h2>Stock Items</h2>
+            <table class="product-stock-table">
+                <thead>
                 <tr>
-                    <td><img src="{{ item.image.url }}" alt="Stock Image" width="50"></td>
-                    <td>{{ item.serial_number|default:"Bulk ×" }}{{ item.quantity }}</td>
-                    <td>{{ item.item_type }}</td>
-                    <td>{{ item.cost_price }}</td>
-                    <td>{{ item.sale_price }}</td>
-                    <td class="action-buttons">
-                        <a href="{% url 'stock_edit' item.pk %}" class="btn-icon btn-edit" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <button class="btn-icon btn-delete" onclick="confirmDelete({{ item.pk }})" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
+                    <th>Serial / Bulk</th>
+                    <th>Specifications</th>
+                    <th>Cost Price</th>
+                    <th>Sale Price</th>
+                    <th>Actions</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for item in stock_items %}
+                    <tr>
+                        <td>
+                            {% if item.serial_number %}
+                                {{ item.serial_number }} {# Display only serial number if it exists #}
+                            {% else %}
+                                Bulk × {{ item.quantity }} {# Display Bulk x quantity otherwise #}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.specifications %}
+                                {% for key, value in item.specifications.items %}
+                                    <strong>{{ key }}:</strong> {{ value }}<br>
+                                {% endfor %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>{{ item.cost_price }}</td>
+                        <td>{{ item.sale_price }}</td>
+                        <td class="action-buttons">
+                            <a href="{% url 'stock_edit' item.pk %}" class="btn-icon btn-edit" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {# Ensure the correct delete function is called #}
+                            <button class="btn-icon btn-delete" onclick="confirmDeleteProductStock({{ item.pk }})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <script>
-        function confirmDelete(id) {
+        const fileInput = document.getElementById('excel_file');
+        const uploadButton = document.getElementById('upload_stock_btn');
+
+        fileInput.addEventListener('change', () => {
+            uploadButton.disabled = !fileInput.files.length;
+        });
+    </script>
+    <script>
+        function confirmDeleteProductStock(id) { // Renamed function to avoid conflict
             Swal.fire({
-                title: 'Are you sure?',
-                text: "This action cannot be undone.",
-                icon: 'warning',
+                title: "Are you sure?",
+                text: `Delete this stock item? This action cannot be undone.`,
+                icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`/inventory/stock/delete/${id}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    }).then(response => {
-                        if (response.ok) {
-                            location.reload();
-                        } else {
-                            Swal.fire('Error!', 'Unable to delete stock item.', 'error');
-                        }
-                    });
+                    // Correct URL using Django's url template tag is preferred,
+                    // but for simplicity in JS, constructing the URL directly.
+                    // Ensure you have a URL pattern named 'stock_delete' that accepts the item pk.
+                    window.location.href = `/inventory/stock/${id}/delete/`;
                 }
             });
         }

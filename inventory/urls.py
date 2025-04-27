@@ -24,7 +24,8 @@ urlpatterns = [
     path('products/<int:product_pk>/stock/add/', views.stock_add, name='stock_add'),
     path('stock/<int:pk>/edit/', views.stock_edit, name='stock_edit'),
     path('stock/<int:pk>/delete/', views.stock_delete, name='stock_delete'),
-    path('api/get-brands/', views.get_brands, name='get_brands'),
+    path('api/get-brands/', views.get_brands_by_category, name='get_brands_by_category'),
+    path('products/<int:pk>/stock/template/download/', views.download_excel_template, name='download_excel_template'),
 ]
 
 if settings.DEBUG:

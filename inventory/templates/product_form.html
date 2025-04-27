@@ -42,14 +42,23 @@
             const categorySelect = document.getElementById('category-select');
             const brandSelect = document.getElementById('brand-select');
 
+            // Initially disable the brand field
+            brandSelect.disabled = true;
+
             if (categorySelect) {
                 categorySelect.addEventListener('change', function () {
                     const categoryId = categorySelect.value;
 
                     if (categoryId) {
                         fetch(`/inventory/api/get-brands/?category_id=${categoryId}`)
-                            .then(response => response.json())
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch brands');
+                                }
+                                return response.json();
+                            })
                             .then(data => {
+                                // Clear and populate the brand select field
                                 brandSelect.innerHTML = '<option value="">Select Brand</option>';
                                 data.forEach(brand => {
                                     const option = document.createElement('option');
@@ -59,8 +68,13 @@
                                 });
                                 brandSelect.disabled = data.length === 0;
                             })
-                            .catch(error => console.error('Error fetching brands:', error));
+                            .catch(error => {
+                                console.error('Error fetching brands:', error);
+                                brandSelect.innerHTML = '<option value="">Select Brand</option>';
+                                brandSelect.disabled = true;
+                            });
                     } else {
+                        // Reset the brand select field if no category is selected
                         brandSelect.innerHTML = '<option value="">Select Brand</option>';
                         brandSelect.disabled = true;
                     }

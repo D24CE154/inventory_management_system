@@ -1,89 +1,77 @@
-/* stock_item_form.css */
-
-/* Form Card Styling */
-.form-card {
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
+/* Stock Item Form Styling */
+.stock-item-form-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
 }
 
-/* Form Group Styling */
-.form-group {
-    margin-bottom: 1.25rem;
+.stock-item-form-group {
+    margin-bottom: 15px;
 }
 
-.form-group label {
+.stock-item-form-group label {
     font-weight: 600;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+    font-size: 14px;
+    margin-bottom: 5px;
     display: block;
-    color: var(--text-color);
+    color: #495057;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.stock-item-form-group input,
+.stock-item-form-group select,
+.stock-item-form-group textarea {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    transition: border-color 0.2s ease;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+    transition: border-color 0.2s ease-in-out;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    border-color: var(--primary-color);
+.stock-item-form-group input:focus,
+.stock-item-form-group select:focus,
+.stock-item-form-group textarea:focus {
+    border-color: #007bff;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-/* Form Actions */
-.form-actions {
+.stock-item-form-actions {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.form-actions .btn {
-    min-width: 120px;
+.stock-item-form-actions .btn {
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 4px;
     text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
 }
 
-@media (max-width: 640px) {
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .form-actions .btn {
-        width: 100%;
-    }
+.stock-item-form-actions .btn-primary {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
 }
 
-/* Fieldset Styling */
-fieldset {
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+.stock-item-form-actions .btn-primary:hover {
+    background-color: #0056b3;
 }
 
-legend {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-color);
-    padding: 0 0.5rem;
+.stock-item-form-actions .btn-secondary {
+    background-color: #6c757d;
+    color: #ffffff;
+    border: none;
 }
 
-/* Error Messages */
-.form-error {
-    color: var(--color-danger);
-    font-size: 0.75rem;
-    margin-top: 0.375rem;
-    display: block;
+.stock-item-form-actions .btn-secondary:hover {
+    background-color: #5a6268;
 }

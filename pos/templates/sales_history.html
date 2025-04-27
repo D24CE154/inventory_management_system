@@ -1,0 +1,51 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Sales History{% endblock %}
+
+{% block breadcrumb %}
+    <span class="current">Sales History</span>
+{% endblock %}
+
+{% block sidebar_menu %}
+    {% include 'menus/common_sidebar.html' with employee=employee active_page='sales_history' %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/employee_management.css' %}">
+{% endblock %}
+
+
+{% block content %}
+    <div class="sales-history-container">
+        <h1>Sales History</h1>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Sale ID</th>
+                <th>Sale Date</th>
+                <th>Employee</th>
+                <th>Customer</th>
+                <th>Payment Method</th>
+                <th>Total Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for sale in sales %}
+                <tr>
+                    <td>{{ sale.sale_id }}</td>
+                    <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                    <td>{{ sale.employee_id.employee_name }}</td>
+                    <td>{{ sale.customer_id.customer_name }}</td>
+                    <td>{{ sale.payment_method }}</td>
+                    <td>{{ sale.total_amount }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No sales found.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

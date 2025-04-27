@@ -3,8 +3,6 @@
 {% block page_title %}{{ form.instance.pk|yesno:"Edit Brand,Add Brand" }}{% endblock %}
 
 {% block breadcrumb %}
-    <a href="{% url 'inventoryManagerDashboard' %}">Inventory Dashboard</a>
-    <span class="separator">/</span>
     <a href="{% url 'brand_list' %}">Brands</a>
     <span class="separator">/</span>
     <span class="current">{{ form.instance.pk|yesno:"Edit,Add" }}</span>

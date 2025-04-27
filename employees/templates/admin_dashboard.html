@@ -147,30 +147,28 @@
             </div>
         </div>
 
-        <!-- Low Stock Products -->
-        <div class="lg:col-span-1">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3 class="chart-title">Low Stock Products</h3>
-                    {# <a href="{% url 'inventory_management' %}" class="text-sm text-blue-500 hover:underline">View All</a> #}
-                </div>
-                <div class="p-4">
-                    {% if low_stock_products %}
-                        <ul class="divide-y divide-gray-200">
-                            {% for product in low_stock_products %}
-                                <li class="py-3">
-                                    <div class="flex justify-between">
-                                        <span class="font-medium">{{ product.product_name }}</span>
-                                        <span class="text-red-500 font-semibold">{{ product.stock }} left</span>
-                                    </div>
-                                    <div class="text-sm text-gray-500">{{ product.category_id.name }}</div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-center py-4 text-gray-500">No low stock products</p>
-                    {% endif %}
-                </div>
+    <!-- Low Stock Products -->
+    <div class="lg:col-span-1">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Low Stock Products</h3>
+            </div>
+            <div class="p-4">
+                {% if low_stock_products %}
+                    <ul class="divide-y divide-gray-200">
+                        {% for product in low_stock_products %}
+                            <li class="py-3">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">{{ product.name }}</span>
+                                    <span class="text-red-500 font-semibold">{{ product.stock }} left</span>
+                                </div>
+                                <div class="text-sm text-gray-500">{{ product.category.name }}</div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-center py-4 text-gray-500">No low stock products</p>
+                {% endif %}
             </div>
         </div>
     </div>

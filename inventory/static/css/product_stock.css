@@ -1,0 +1,76 @@
+/* Product Stock Page Styling */
+.product-stock-container {
+    margin-top: 20px;
+}
+
+.product-stock-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.product-stock-actions {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-stock-actions h2 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-download {
+    background-color: #17a2b8;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-download:hover {
+    background-color: #138496;
+}
+
+.upload-form .form-group {
+    margin-bottom: 15px;
+}
+
+.product-stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.product-stock-table th,
+.product-stock-table td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.product-stock-table th {
+    background-color: #e9ecef;
+    font-weight: bold;
+    color: #495057;
+}
+
+.product-stock-table tr:hover {
+    background-color: #f1f3f5;
+}
