@@ -41,14 +41,6 @@ inventory_management_system/   # Root Project Folder
 │   │── static/            # Static files for authentication
 │   │── __init__.py        # Required for Python package
 │
-│── reports/               # Reporting Module (Sales & Inventory Reports)
-│   │── models.py          # Database models for reports
-│   │── views.py           # Business logic for reports generation
-│   │── urls.py            # URL routes for reports
-│   │── templates/ # HTML templates for reports
-│   │── static/    # CSS, JS for reports
-│   │── __init__.py        # Required for Python package
-│
 │── static/                # Global Static Files (CSS, JS, Images)
 │── media/                 # Media Files (User uploads)
 │── templates/             # Global Templates (base.html, common components)
