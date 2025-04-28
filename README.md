@@ -5,7 +5,7 @@ A Django-based inventory management system that integrates point of sale, invent
 # Project Structure  
 
 inventory_management_system/  # Root Project Folder  
-├── inventory_management_system/ # Main Django Project
+├── inventory_management_system/ # Main Django Project  
 │   ├── settings.py     # Project settings  
 │   ├── urls.py         # Main URL routing  
 │   ├── wsgi.py         # WSGI entry point  
