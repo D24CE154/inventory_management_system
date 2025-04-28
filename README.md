@@ -3,8 +3,6 @@
 A Django-based inventory management system that integrates point of sale, inventory management, supplier management, and employee authentication.
 
 [Project Structure](Project%20structure.txt)
-
-# Project structure
 inventory_management_system/   # Root Project Folder
 │── inventory_management_system/  # Main Django Project
 │   │── settings.py        # Project settings
