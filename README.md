@@ -17,3 +17,8 @@ A Django-based inventory management system that integrates point of sale, invent
 - JavaScript
 - HTML5 / CSS3
 - MySQL
+
+
+Update the below fields with your email and app password in [settings.py](inventory_management_system/settings.py)
+EMAIL_HOST_USER = 'example@gmail.com'
+EMAIL_HOST_PASSWORD = 'Your Key
