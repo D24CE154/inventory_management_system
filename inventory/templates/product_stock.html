@@ -11,6 +11,7 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/product_stock.css' %}">
     <link rel="stylesheet" href="{% static 'css/employee_management.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> {# Moved SweetAlert import here #}
 {% endblock %}
 
 {% block sidebar_menu %}
@@ -26,6 +27,12 @@
 
         <!-- Combined Actions Section -->
         <div class="product-stock-actions">
+            <div class="search-container">
+                <form method="get">
+                    <input type="text" name="search" class="search-input" placeholder="Search stock items...">
+                    <button type="submit" class="btn btn-primary btn-search"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
             <h2>Manage Stock</h2>
             <div class="action-buttons">
                 <a href="{% url 'stock_add' product.pk %}" class="btn btn-primary">Add Stock</a>
@@ -59,9 +66,9 @@
                     <tr>
                         <td>
                             {% if item.serial_number %}
-                                {{ item.serial_number }} {# Display only serial number if it exists #}
+                                {{ item.serial_number }}
                             {% else %}
-                                Bulk × {{ item.quantity }} {# Display Bulk x quantity otherwise #}
+                                Bulk × {{ item.quantity }}
                             {% endif %}
                         </td>
                         <td>
@@ -79,11 +86,14 @@
                             <a href="{% url 'stock_edit' item.pk %}" class="btn-icon btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            {# Ensure the correct delete function is called #}
-                            <button class="btn-icon btn-delete" onclick="confirmDeleteProductStock({{ item.pk }})" title="Delete">
+                            <button class="btn-icon btn-delete" onclick="confirmDeleteProductStock('{% url 'stock_delete' item.pk %}')" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">No stock items found for this product.</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -97,12 +107,11 @@
         fileInput.addEventListener('change', () => {
             uploadButton.disabled = !fileInput.files.length;
         });
-    </script>
-    <script>
-        function confirmDeleteProductStock(id) { // Renamed function to avoid conflict
+
+        function confirmDeleteProductStock(deleteUrl) { // Changed parameter name
             Swal.fire({
                 title: "Are you sure?",
-                text: `Delete this stock item? This action cannot be undone.`,
+                text: "Delete this stock item? This action cannot be undone.",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
@@ -110,10 +119,7 @@
                 confirmButtonText: "Yes, delete it!"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Correct URL using Django's url template tag is preferred,
-                    // but for simplicity in JS, constructing the URL directly.
-                    // Ensure you have a URL pattern named 'stock_delete' that accepts the item pk.
-                    window.location.href = `/inventory/stock/${id}/delete/`;
+                    window.location.href = deleteUrl; // Use the passed URL
                 }
             });
         }

@@ -1,5 +1,5 @@
 from django import forms
-from supplier.models import Supplier
+from supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem
 import re
 
 class SupplierForm(forms.ModelForm):
@@ -74,3 +74,43 @@ class SupplierForm(forms.ModelForm):
         if len(address.strip()) < 10:
             raise forms.ValidationError("Please provide a complete address (at least 10 characters).")
         return address.strip()
+
+class PurchaseOrderForm(forms.ModelForm):
+    class Meta:
+        model = PurchaseOrder
+        fields = ['supplier_id', 'total_cost', 'status', 'received_date']
+        widgets = {
+            'supplier_id': forms.Select(attrs={'class': 'form-control'}),
+            'total_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'received_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+    def clean_total_cost(self):
+        cost = self.cleaned_data.get('total_cost')
+        if cost is None or cost <= 0:
+            raise ValidationError('Total cost must be greater than 0.')
+        return cost
+
+class PurchaseOrderItemForm(forms.ModelForm):
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ['purchase_order_id', 'product_id', 'quantity', 'unit_cost']
+        widgets = {
+            'purchase_order_id': forms.Select(attrs={'class': 'form-control'}),
+            'product_id': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'unit_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+    def clean_quantity(self):
+        qty = self.cleaned_data.get('quantity')
+        if qty is None or qty <= 0:
+            raise ValidationError('Quantity must be greater than 0.')
+        return qty
+
+    def clean_unit_cost(self):
+        cost = self.cleaned_data.get('unit_cost')
+        if cost is None or cost <= 0:
+            raise ValidationError('Unit cost must be greater than 0.')
+        return cost

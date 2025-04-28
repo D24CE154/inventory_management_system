@@ -26,9 +26,6 @@
                 </div>
             </div>
             <h2 class="metric-value">{{ product_count|default:"0" }}</h2>
-            <div class="metric-change positive">
-                <i class="fas fa-arrow-up mr-1"></i> 5% from last month
-            </div>
         </div>
 
         <div class="metric-card">
@@ -39,9 +36,6 @@
                 </div>
             </div>
             <h2 class="metric-value">{{ low_stock_count|default:"0" }}</h2>
-            <div class="metric-change negative">
-                <i class="fas fa-arrow-up mr-1"></i> 12% from last month
-            </div>
         </div>
 
         <div class="metric-card">
@@ -52,9 +46,6 @@
                 </div>
             </div>
             <h2 class="metric-value">{{ out_of_stock_count|default:"0" }}</h2>
-            <div class="metric-change negative">
-                <i class="fas fa-arrow-up mr-1"></i> 3% from last month
-            </div>
         </div>
 
         <div class="metric-card">
@@ -65,9 +56,6 @@
                 </div>
             </div>
             <h2 class="metric-value">₹{{ inventory_value|default:"0" }}</h2>
-            <div class="metric-change positive">
-                <i class="fas fa-arrow-up mr-1"></i> 8% from last month
-            </div>
         </div>
     </div>
 
@@ -135,7 +123,7 @@
                                     </span>
                                 </td>
                                 <td>
-{#                                    <a href="{% url 'create_purchase_order' %}?product={{ product.id }}" class="text-sm text-blue-500 hover:underline">#}
+                                    <a href="{% url 'add_purchase_order' %}?product={{ product.id }}" class="text-sm text-blue-500 hover:underline">
                                         Create Order
                                     </a>
                                 </td>
