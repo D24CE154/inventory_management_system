@@ -2,7 +2,7 @@
 
 A Django-based inventory management system that integrates point of sale, inventory management, supplier management, and employee authentication.
 
-[Project Structure](Project strucutre.txt)
+[Project Structure](Project%20structure.txt)
 
 ## Features
 
