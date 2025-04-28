@@ -1,6 +1,6 @@
 // pos/static/js/sales_dashboard.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize charts
+    // Initialize charts with initially loaded data
     initSalesPerformanceChart();
     initTopProductsChart();
 
@@ -8,48 +8,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const salesPeriodSelector = document.querySelector('.sales-period-selector');
     if (salesPeriodSelector) {
         salesPeriodSelector.addEventListener('change', function() {
-            updateSalesPerformanceChart(this.value);
+            fetchAndUpdateSalesPerformanceChart(this.value); // Use fetch function
         });
     }
 
     const productsPeriodSelector = document.querySelector('.products-period-selector');
     if (productsPeriodSelector) {
         productsPeriodSelector.addEventListener('change', function() {
-            updateTopProductsChart(this.value);
+            fetchAndUpdateTopProductsChart(this.value); // Use fetch function
         });
     }
 });
 
-// Sales Performance Chart
-function initSalesPerformanceChart() {
-    const ctx = document.getElementById('salesPerformanceChart').getContext('2d');
+// --- Sales Performance Chart ---
 
-    // Get data from JSON element
-    let salesData;
-    try {
-        salesData = JSON.parse(document.getElementById('sales-data').textContent || '{}');
-    } catch (e) {
-        console.error("Error parsing sales data:", e);
-        salesData = {
-            daily: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                values: [12500, 19200, 15000, 22400, 18300, 29100, 31200]
-            }
-        };
+// Global variable to hold the chart instance
+let salesChart = null;
+
+function initSalesPerformanceChart() {
+    const ctx = document.getElementById('salesPerformanceChart')?.getContext('2d');
+    if (!ctx) {
+        console.error("Sales Performance Chart canvas not found.");
+        return;
     }
 
-    const data = salesData.daily || {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        values: [12500, 19200, 15000, 22400, 18300, 29100, 31200]
+    // Get initial data from the embedded JSON script tag
+    let initialSalesData;
+    try {
+        const salesDataElement = document.getElementById('sales-data');
+        initialSalesData = JSON.parse(salesDataElement?.textContent || '{}');
+    } catch (e) {
+        console.error("Error parsing initial sales data:", e);
+        initialSalesData = {}; // Fallback to empty data
+    }
+
+    // Use 'daily' data for initialization, or provide default structure if missing
+    const initialData = initialSalesData.daily || {
+        labels: [],
+        values: []
     };
 
-    window.salesChart = new Chart(ctx, {
+    // Destroy existing chart instance if it exists
+    if (salesChart) {
+        salesChart.destroy();
+    }
+
+    salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: data.labels,
+            labels: initialData.labels,
             datasets: [{
                 label: 'Revenue',
-                data: data.values,
+                data: initialData.values,
                 backgroundColor: 'rgba(26, 115, 232, 0.1)',
                 borderColor: '#1a73e8',
                 borderWidth: 2,
@@ -83,116 +93,147 @@ function initSalesPerformanceChart() {
     });
 }
 
-function updateSalesPerformanceChart(period) {
-    // Get data from JSON element
-    let salesData;
-    try {
-        salesData = JSON.parse(document.getElementById('sales-data').textContent || '{}');
-    } catch (e) {
-        salesData = {};
+function fetchAndUpdateSalesPerformanceChart(period) {
+    if (!salesChart) {
+        console.error("Sales chart instance not available for update.");
+        return;
     }
 
-    // If period data doesn't exist, create sample data
-    if (!salesData[period]) {
-        salesData[period] = period === 'daily' ? {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            values: [12500, 19200, 15000, 22400, 18300, 29100, 31200]
-        } : period === 'weekly' ? {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            values: [98000, 112000, 125000, 138000]
-        } : {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            values: [350000, 410000, 395000, 430000, 489000, 520000]
-        };
-    }
+    // Construct the URL with the period query parameter
+    const url = `/pos/api/sales-performance-data/?period=${encodeURIComponent(period)}`;
 
-    const data = salesData[period];
-
-    window.salesChart.data.labels = data.labels;
-    window.salesChart.data.datasets[0].data = data.values;
-    window.salesChart.update();
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.labels && data.values) {
+                // Update chart data
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.values;
+                salesChart.update(); // Redraw the chart
+            } else {
+                console.error("Invalid data format received from server:", data);
+                // Optionally clear the chart or show a default state
+                salesChart.data.labels = [];
+                salesChart.data.datasets[0].data = [];
+                salesChart.update();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching sales performance data:', error);
+            // Optionally display an error message to the user on the chart
+            // For now, just clear the chart
+            salesChart.data.labels = [];
+            salesChart.data.datasets[0].data = [];
+            salesChart.update();
+        });
 }
 
-// Top Products Chart
+
+// --- Top Products Chart ---
+
+// Global variable to hold the chart instance
+let productsChart = null;
+
 function initTopProductsChart() {
-    const ctx = document.getElementById('topProductsChart').getContext('2d');
+    const ctx = document.getElementById('topProductsChart')?.getContext('2d');
+    if (!ctx) {
+        console.error("Top Products Chart canvas not found.");
+        return;
+    }
 
-    // Get data from JSON element
-    let topProductsData;
+    // Get initial data from the embedded JSON script tag
+    let initialTopProductsData;
     try {
-        topProductsData = JSON.parse(document.getElementById('top-products-data').textContent || '{}');
+        const topProductsDataElement = document.getElementById('top-products-data');
+        initialTopProductsData = JSON.parse(topProductsDataElement?.textContent || '{}');
     } catch (e) {
-        console.error("Error parsing top products data:", e);
-        const productsToday = JSON.parse(document.getElementById('top-products-today').textContent || '[]');
-
-        topProductsData = {
-            today: {
-                labels: productsToday.map(product => product.product_id__product_name) || [],
-                values: productsToday.map(product => product.units) || []
-            }
-        };
+        console.error("Error parsing initial top products data:", e);
+        initialTopProductsData = {}; // Fallback to empty data
     }
 
-    if (!topProductsData.today || topProductsData.today.labels.length === 0) {
-        topProductsData.today = {
-            labels: ['iPhone 15 Pro', 'Samsung S24', 'Redmi Note 12', 'OnePlus 11', 'Vivo V30'],
-            values: [42, 38, 35, 29, 24]
-        };
+    // Use 'today' data for initialization, or provide default structure if missing
+    const initialData = initialTopProductsData.today || {
+        labels: [],
+        values: []
+    };
+
+    // Destroy existing chart instance if it exists
+    if (productsChart) {
+        productsChart.destroy();
     }
 
-    const data = topProductsData.today;
-
-    window.productsChart = new Chart(ctx, {
+    productsChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.labels,
+            labels: initialData.labels,
             datasets: [{
                 label: 'Units Sold',
-                data: data.values,
-                backgroundColor: [
-                    '#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8F44AD'
+                data: initialData.values,
+                backgroundColor: [ // Provide enough colors or use a function
+                    '#4285F4', '#EA4335', '#FBBC05', '#34A853', '#8F44AD',
+                    '#1E88E5', '#D81B60', '#FFB300', '#00ACC1', '#7CB342'
                 ]
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            indexAxis: 'y',
+            indexAxis: 'y', // Keep bars horizontal
             scales: {
                 x: {
                     beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Hide legend if only one dataset
                 }
             }
         }
     });
 }
 
-function updateTopProductsChart(period) {
-    // Get data from JSON element
-    let topProductsData;
-    try {
-        topProductsData = JSON.parse(document.getElementById('top-products-data').textContent || '{}');
-    } catch (e) {
-        topProductsData = {};
+function fetchAndUpdateTopProductsChart(period) {
+    if (!productsChart) {
+        console.error("Products chart instance not available for update.");
+        return;
     }
 
-    // If period data doesn't exist, create sample data
-    if (!topProductsData[period]) {
-        topProductsData[period] = period === 'today' ? {
-            labels: ['iPhone 15 Pro', 'Samsung S24', 'Redmi Note 12', 'OnePlus 11', 'Vivo V30'],
-            values: [42, 38, 35, 29, 24]
-        } : period === 'this_week' ? {
-            labels: ['Samsung S24', 'iPhone 15 Pro', 'Redmi Note 12', 'Poco F5', 'OnePlus 11'],
-            values: [168, 155, 129, 110, 95]
-        } : {
-            labels: ['iPhone 15 Pro', 'Samsung S24', 'Samsung A54', 'Redmi Note 12', 'Vivo V30'],
-            values: [452, 431, 378, 345, 312]
-        };
-    }
+    // Construct the URL with the period query parameter
+    const url = `/pos/api/top-products-data/?period=${encodeURIComponent(period)}`;
 
-    const data = topProductsData[period];
-
-    window.productsChart.data.labels = data.labels;
-    window.productsChart.data.datasets[0].data = data.values;
-    window.productsChart.update();
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.labels && data.values) {
+                // Update chart data
+                productsChart.data.labels = data.labels;
+                productsChart.data.datasets[0].data = data.values;
+                productsChart.update(); // Redraw the chart
+            } else {
+                console.error("Invalid data format received from server:", data);
+                // Optionally clear the chart or show a default state
+                productsChart.data.labels = [];
+                productsChart.data.datasets[0].data = [];
+                productsChart.update();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching top products data:', error);
+            // Optionally display an error message to the user on the chart
+            // For now, just clear the chart
+            productsChart.data.labels = [];
+            productsChart.data.datasets[0].data = [];
+            productsChart.update();
+        });
 }

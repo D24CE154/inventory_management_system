@@ -6,8 +6,26 @@
 {% block breadcrumb %}
     <span class="current">Reports & Analytics</span>
 {% endblock %}
+
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/report_analytics.css' %}">
+    <style>
+        .date-filter-form select {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .reports-section {
+            margin-top: 30px;
+        }
+        .section-header {
+            font-size: 1.75em;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+    </style>
 {% endblock %}
 
 {% block page_title %}Reports & Analytics{% endblock %}
@@ -21,114 +39,131 @@
     <div class="container">
         <h1>Reports & Analytics</h1>
 
-        <section class="report-section">
-            <h2>Employee Reports</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'employee_sales_performance_report_pdf' %}" download>
-                        Employee Sales Performance Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
+        <!-- Filter Form -->
+        <div class="date-filter-form">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date">
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date">
+            <label for="employee_id">Employee:</label>
+            <select id="employee_id" name="employee_id">
+                <option value="">All Employees</option>
+                {% for employee in employees %}
+                    <option value="{{ employee.employee_id }}">{{ employee.full_name }}</option>
+                {% endfor %}
+            </select>
+            <small style="color: #777;">(Leave blank for all time or all employees)</small>
+        </div>
 
-        <section class="report-section">
-            <h2>Audit Log Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'audit_log_report_pdf' %}" download>
-                        Audit Log Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
+        {% if logged_in_employee.role == "Admin" %}
+            <!-- Admin: All Report Sections -->
+            <!-- Employee and Date Specific Reports -->
+            <div class="reports-section">
+                <div class="section-header">Employee & Date Specific Reports</div>
+                <div class="card-grid">
+                    <div class="report-card">
+                        <h3>Employee Sales Performance Report</h3>
+                        <a href="{% url 'employee_sales_performance_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Audit Log Report</h3>
+                        <a href="{% url 'audit_log_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                </div>
+            </div>
 
-        <section class="report-section">
-            <h2>Sales Summary Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'sales_summary_report_pdf' %}" download>
-                        Sales Summary Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
+            <!-- Date Specific Reports -->
+            <div class="reports-section">
+                <div class="section-header">Date Specific Reports</div>
+                <div class="card-grid">
+                    <div class="report-card">
+                        <h3>Sales Summary Report</h3>
+                        <a href="{% url 'sales_summary_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Customer Purchase Report</h3>
+                        <a href="{% url 'customer_purchase_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Financial Analytics Report</h3>
+                        <a href="{% url 'financial_analytics_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Purchase Orders Report</h3>
+                        <a href="{% url 'purchase_orders_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Supplier Report</h3>
+                        <a href="{% url 'supplier_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                </div>
+            </div>
 
-        <section class="report-section">
-            <h2>Customer Purchase Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'customer_purchase_report_pdf' %}" download>
-                        Customer Purchase Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
+            <!-- Reports With No Filters -->
+            <div class="reports-section">
+                <div class="section-header">Static Reports</div>
+                <div class="card-grid">
+                    <div class="report-card">
+                        <h3>Product Inventory Report</h3>
+                        <a href="{% url 'product_inventory_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Product Category Report</h3>
+                        <a href="{% url 'product_category_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Brand Performance Report</h3>
+                        <a href="{% url 'brand_performance_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                </div>
+            </div>
 
-        <section class="report-section">
-            <h2>Financial Analytics Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'financial_analytics_report_pdf' %}" download>
-                        Financial Analytics Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
-
-        <section class="report-section">
-            <h2>Product Inventory Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'product_inventory_report_pdf' %}" download>
-                        Product Inventory Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
-
-        <section class="report-section">
-            <h2>Product Category Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'product_category_report_pdf' %}" download>
-                        Product Category Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
-
-        <section class="report-section">
-            <h2>Brand Performance Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'brand_performance_report_pdf' %}" download>
-                        Brand Performance Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
-
-        <section class="report-section">
-            <h2>Purchase Orders Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'purchase_orders_report_pdf' %}" download>
-                        Purchase Orders Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
-
-        <section class="report-section">
-            <h2>Supplier Report</h2>
-            <ul>
-                <li>
-                    <a href="{% url 'supplier_report_pdf' %}" download>
-                        Supplier Report (PDF)
-                    </a>
-                </li>
-            </ul>
-        </section>
+        {% elif logged_in_employee.role == "Inventory Manager" %}
+            <div class="reports-section">
+                <div class="section-header">Inventory Reports</div>
+                <div class="card-grid">
+                    <div class="report-card">
+                        <h3>Product Inventory Report</h3>
+                        <a href="{% url 'product_inventory_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Product Category Report</h3>
+                        <a href="{% url 'product_category_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                    <div class="report-card">
+                        <h3>Brand Performance Report</h3>
+                        <a href="{% url 'brand_performance_report_pdf' %}" class="report-link" download>Download PDF</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportLinks = document.querySelectorAll('.report-link');
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            const employeeSelect = document.getElementById('employee_id');
+            const today = new Date().toISOString().split('T')[0];
+            endDateInput.setAttribute("max", today);
+
+            reportLinks.forEach(link => {
+                link.addEventListener('click', function(e){
+                    e.preventDefault();
+                    let url = new URL(link.href, window.location.href);
+                    if(startDateInput.value){
+                        url.searchParams.append('start_date', startDateInput.value);
+                    }
+                    if(endDateInput.value){
+                        url.searchParams.append('end_date', endDateInput.value);
+                    }
+                    if(employeeSelect.value){
+                        url.searchParams.append('employee_id', employeeSelect.value);
+                    }
+                    window.location.href = url.toString();
+                });
+            });
+        });
+    </script>
 {% endblock %}

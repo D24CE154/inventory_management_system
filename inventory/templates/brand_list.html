@@ -16,6 +16,13 @@
 {% block content %}
     <div class="container mt-4">
         <h1>Brands</h1>
+        <div class="search-container">
+            <form method="get">
+                <input type="text" name="search" class="search-input" placeholder="Search brands...">
+                <button type="submit" class="btn btn-primary btn-search"> <i class="fas fa-search"></i> </button>
+
+            </form>
+        </div>
         <a href="{% url 'brand_create' %}" class="btn btn-primary mb-3">Add Brand</a>
         <table class="data-table">
             <thead>

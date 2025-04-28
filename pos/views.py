@@ -1,7 +1,9 @@
 # pos/views.py
 import json
 from datetime import timedelta
+from decimal import Decimal
 from io import BytesIO
+
 import razorpay
 from django.conf import settings
 from django.contrib import messages
@@ -15,76 +17,99 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import get_template
 from django.utils.timezone import now
 from xhtml2pdf import pisa
-from decimal import Decimal
+
 from employees.views import is_active_employee
 from .forms import CustomerForm
 from .models import Sale, SaleItem, Customer, Product, ProductCategory, ProductItem
 
 
+@login_required  # Ensure login is required
 def salesExecutiveDashboard(request):
-    if not is_active_employee(request.user):
+    # Check if the user is an active employee and authorized
+    if not hasattr(request.user, 'employee') or not is_active_employee(request.user):
         messages.error(request, 'You are not authorized to view this page.')
-        return redirect('error_403_view')
+        # Redirect to a generic error page or login page
+        return redirect('login')  # Or an appropriate error view name
 
     today = now().date()
     yesterday = today - timedelta(days=1)
 
+    # --- Today's Sales Count & Change ---
     today_sales_count = Sale.objects.filter(sale_date__date=today).count()
     yesterday_sales_count = Sale.objects.filter(sale_date__date=yesterday).count()
     today_sales_change = 0
-
     if yesterday_sales_count > 0:
-        today_sales_change = round(((yesterday_sales_count - today_sales_count) / yesterday_sales_count) * 100)
+        # Calculate percentage change
+        today_sales_change = round(((today_sales_count - yesterday_sales_count) / yesterday_sales_count) * 100)
 
-    today_revenue = Sale.objects.filter(sale_date__date=today).aggregate(total=Sum('total_amount'))['total'] or 0
+    # --- Today's Revenue & Change ---
+    today_revenue = Sale.objects.filter(sale_date__date=today).aggregate(total=Sum('total_amount'))['total'] or Decimal(
+        '0.00')
     yesterday_revenue = Sale.objects.filter(sale_date__date=yesterday).aggregate(total=Sum('total_amount'))[
-                            'total'] or 0
-
+                            'total'] or Decimal('0.00')
     today_revenue_change = 0
     if yesterday_revenue > 0:
         today_revenue_change = round(((today_revenue - yesterday_revenue) / yesterday_revenue) * 100)
 
+    # --- Monthly Target Progress ---
     month_start = today.replace(day=1)
-    monthly_target = 150000
-    monthly_sales = Sale.objects.filter(sale_date__date__gte=month_start,
-                                        sale_date__lte=today).aggregate(total=Sum('total_amount'))['total'] or 0
+    # Consider making the target dynamic (e.g., from settings or employee model)
+    monthly_target = Decimal('150000.00')
+    monthly_sales = Sale.objects.filter(sale_date__date__gte=month_start, sale_date__date__lte=today).aggregate(
+        total=Sum('total_amount'))['total'] or Decimal('0.00')
+    monthly_target_percentage = 0
+    if monthly_target > 0:
+        # Calculate percentage achieved
+        monthly_target_percentage = round((monthly_sales / monthly_target) * 100)
 
-    if monthly_sales > 0:
-        monthly_target_percentage = round(((monthly_target - monthly_sales) / monthly_target) * 100)
-    else:
-        monthly_target_percentage = 0
-
-    avg_order_value = Sale.objects.filter(sale_date__date=today).aggregate(avg=Avg('total_amount'))['avg'] or 0
-    last_month = today.replace(day=1) - timedelta(days=1)
-    last_month_start = last_month.replace(day=1)
-    last_month_avg = Sale.objects.filter(sale_date__date__gte=last_month_start,
-                                         sale_date__date__lte=last_month).aggregate(avg=Avg('total_amount'))['avg'] or 0
-
+    # --- Average Order Value & Change ---
+    avg_order_value = Sale.objects.filter(sale_date__date=today).aggregate(avg=Avg('total_amount'))['avg'] or Decimal(
+        '0.00')
+    # Calculate last month's average
+    last_month_end = month_start - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+    last_month_avg = \
+    Sale.objects.filter(sale_date__date__gte=last_month_start, sale_date__date__lte=last_month_end).aggregate(
+        avg=Avg('total_amount'))['avg'] or Decimal('0.00')
     avg_change = 0
     if last_month_avg > 0:
         avg_change = round(((avg_order_value - last_month_avg) / last_month_avg) * 100)
 
+    # --- Recent Sales ---
+    # Use select_related for efficiency
     recent_sales = Sale.objects.select_related('customer_id').order_by('-sale_date')[:5]
+
+    # --- Sales Performance Chart Data (Last 7 Days) ---
+    sales_performance_labels = []
+    sales_performance_values = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        daily_total = Sale.objects.filter(sale_date__date=day).aggregate(total=Sum('total_amount'))['total'] or 0
+        sales_performance_labels.append(day.strftime('%a'))  # Short day name (e.g., Mon)
+        sales_performance_values.append(float(daily_total))  # Ensure float for JSON
 
     sales_data = {
         'daily': {
-            'labels': [(today - timedelta(days=i)).strftime('%a') for i in range(6, -1, -1)],
-            'values': [
-                Sale.objects.filter(sale_date__date=(today - timedelta(days=i))).aggregate(total=Sum('total_amount'))[
-                    'total'] or 0 for i in range(6, -1, -1)],
+            'labels': sales_performance_labels,
+            'values': sales_performance_values,
         }
+        # Add weekly/monthly data fetching logic here if needed
     }
 
-    top_products_today = (SaleItem.objects.filter(sale_id__sale_date__date=today)
-                          .values('product_id__product_name')
-                          .annotate(units=Sum('quantity'))
-                          .order_by('-units')[:5])
+    # --- Top Products Chart Data (Today) ---
+    # Corrected field lookup: product_id__name
+    top_products_today_query = (SaleItem.objects.filter(sale_id__sale_date__date=today)
+                                .values('product_id__name')  # Use 'name' from Product model
+                                .annotate(units=Sum('quantity'))
+                                .order_by('-units')[:5])
 
     top_products_data = {
         'today': {
-            'labels': [item['product_id__product_name'] for item in top_products_today],
-            'values': [item['units'] for item in top_products_today]
+            # Corrected key: product_id__name
+            'labels': [item['product_id__name'] for item in top_products_today_query],
+            'values': [item['units'] for item in top_products_today_query]
         }
+        # Add week/month data fetching logic here if needed
     }
 
     context = {
@@ -100,13 +125,15 @@ def salesExecutiveDashboard(request):
         'recent_sales': recent_sales,
         'sales_data': json.dumps(sales_data),
         'top_products_today': json.dumps(top_products_data),
-        'employee': request.user.employee,
+        # Pass the employee object correctly for the template include
+        'logged_in_employee': request.user.employee,
     }
 
     return render(request, 'SalesDashboard.html', context=context)
 
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
 
 @login_required
 def create_sale(request):
@@ -183,8 +210,9 @@ def create_sale(request):
             sale.save()
         request.session["sale_invoice_email"] = customer.customer_email
         return redirect("generate_invoice", sale_id=sale.sale_id)
-    context = {"categories": categories,"logged_in_employee": request.user.employee}
+    context = {"categories": categories, "logged_in_employee": request.user.employee}
     return render(request, "create_sale.html", context)
+
 
 @login_required
 def fetch_products_by_category(request, category_id):
@@ -207,6 +235,7 @@ def fetch_products_by_category(request, category_id):
 
     return JsonResponse({"products": product_data})
 
+
 @login_required
 def add_customer(request):
     if request.method == "POST":
@@ -219,6 +248,7 @@ def add_customer(request):
         else:
             # Ensure this block is indented correctly (e.g., 8 spaces)
             return JsonResponse({"status": "error", "message": "Invalid form data."})
+
 
 @login_required
 def fetch_product_by_imei(request):
@@ -250,6 +280,7 @@ def fetch_product_by_imei(request):
         return JsonResponse({"success": False, "error": "Invalid IMEI or Product not found/already sold."})
     except Exception as e:
         return JsonResponse({"success": False, "error": "An unexpected error occurred while fetching product details."})
+
 
 @login_required
 def check_stock(request):
@@ -295,6 +326,7 @@ def check_stock(request):
         print(f"Error in check_stock for product_id {product_id}: {e}")  # Log the specific error
         return JsonResponse({"success": False, "error": "An unexpected error occurred while checking stock."})
 
+
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
     html = template.render(context_dict)
@@ -306,6 +338,7 @@ def render_to_pdf(template_src, context_dict):
     # Log error if PDF generation fails
     print(f"PDF generation error: {pdf.err}")
     return None
+
 
 @login_required
 def generate_invoice(request, sale_id):
@@ -344,7 +377,6 @@ def generate_invoice(request, sale_id):
     else:
         messages.error(request, "Failed to generate the invoice PDF.")
         return redirect("salesExecutiveDashboard")
-
 
 
 @login_required
